@@ -9,29 +9,21 @@
 <style>
 /* =====================================================================
    WORLDCUP AI — CSS
-   Conceito visual: "Placar Eletrônico de Estádio"
-   Fundo grafite quase preto · números sempre em mono · display condensada
-   para títulos · verde-grama = AO VIVO · dourado = previsão de IA
+   (mantido na íntegra como no original)
    ===================================================================== */
-
-/* ---------- 1. Tokens ---------- */
 :root{
   --bg-0:#0a0d0f; --bg-1:#12171a; --bg-2:#1a2125; --bg-3:#222a2f;
   --line:#2b3338; --line-soft:#1c2327;
   --text-0:#f2f4f3; --text-1:#aab4b8; --text-2:#6c777c;
-
   --live:#36c46b; --live-bg:rgba(54,196,107,.12);
   --gold:#e0a72e; --gold-bg:rgba(224,167,46,.12);
   --red:#e6483f; --red-bg:rgba(230,72,63,.12);
   --yellow-card:#f0c419; --blue:#4f8ef0;
-
   --grad-gold:linear-gradient(135deg,#f3c463 0%,#e0a72e 55%,#b9831c 100%);
   --grad-live:linear-gradient(135deg,#54e08a 0%,#36c46b 60%,#239151 100%);
-
   --font-display:"Archivo Narrow","Arial Narrow",sans-serif;
   --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
   --font-mono:"JetBrains Mono","IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
-
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
   --radius-sm:2px; --radius-md:5px; --radius-lg:8px;
   --maxw:1280px; --header-h:60px;
@@ -46,8 +38,6 @@
   --live-bg:rgba(35,145,81,.10); --gold-bg:rgba(185,131,28,.12); --red-bg:rgba(230,72,63,.08);
   --shadow-md:0 4px 18px rgba(0,0,0,.08); --shadow-lg:0 16px 48px rgba(0,0,0,.12);
 }
-
-/* ---------- 2. Reset ---------- */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{color-scheme:dark}
 [data-theme="light"] html{color-scheme:light}
@@ -69,17 +59,13 @@ ul{list-style:none}
 .mono{font-family:var(--font-mono)}
 .hidden{display:none !important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-
-/* ---------- 3. Layout shell ---------- */
 .app-shell{min-height:100vh;display:flex;flex-direction:column}
 .container{max-width:var(--maxw);margin:0 auto;padding:0 var(--sp-5);width:100%}
-
-/* ---------- 4. Header ---------- */
 .site-header .container{
-  max-width: none;        /* remove a limitação de largura */
-  padding: 0 var(--sp-5); /* mantém o espaçamento interno nas bordas */
+  max-width: none;
+  padding: 0 var(--sp-5);
   width: 100%;
-  margin: 0;              /* opcional, já que width:100% ocupa todo o espaço */
+  margin: 0;
 }
 .site-header .container{height:100%;display:flex;align-items:center;gap:var(--sp-5)}
 .brand{display:flex;align-items:center;gap:var(--sp-2);font-family:var(--font-display);font-weight:700;letter-spacing:.02em;font-size:1.15rem;white-space:nowrap}
@@ -101,8 +87,6 @@ ul{list-style:none}
 }
 .nav-link:hover{color:var(--text-0);background:var(--bg-2)}
 .nav-link.active{color:var(--bg-0);background:var(--gold)}
-
-/* ações no nav (busca + botões) – desktop e mobile */
 .nav-actions{
   display:flex;
   align-items:center;
@@ -132,8 +116,6 @@ ul{list-style:none}
 }
 .icon-btn:hover{background:var(--bg-2);color:var(--text-0)}
 .icon-btn.is-active{color:var(--gold);border-color:var(--gold)}
-
-/* ---------- 4b. Hamburger (mobile) ---------- */
 .hamburger-btn{display:none;width:36px;height:36px;align-items:center;justify-content:center;border-radius:var(--radius-sm);color:var(--text-0);flex:none}
 .hamburger-btn .bars{position:relative;width:18px;height:13px}
 .hamburger-btn .bars span{position:absolute;left:0;width:100%;height:2px;background:currentColor;border-radius:2px;transition:transform .22s var(--ease),opacity .22s var(--ease),top .22s var(--ease)}
@@ -143,7 +125,6 @@ ul{list-style:none}
 .hamburger-btn.open .bars span:nth-child(1){top:5.5px;transform:rotate(45deg)}
 .hamburger-btn.open .bars span:nth-child(2){opacity:0}
 .hamburger-btn.open .bars span:nth-child(3){top:5.5px;transform:rotate(-45deg)}
-
 @media (max-width:860px){
   .hamburger-btn{display:flex}
   .main-nav{
@@ -161,8 +142,6 @@ ul{list-style:none}
     border-bottom:1px solid var(--line-soft); border-radius:0;
   }
   .nav-link.active{ background:var(--gold-bg); color:var(--gold); }
-
-  /* ações ficam dentro do menu */
   .nav-actions{
     flex-direction:column;
     align-items:stretch;
@@ -196,8 +175,6 @@ ul{list-style:none}
   .nav-actions .icon-btn:hover{background:var(--bg-3)}
   .nav-actions .icon-btn.is-active{border-color:var(--gold)}
 }
-
-/* ---------- 5. Botões e chips ---------- */
 .btn{
   display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);
   font-weight:700;font-size:.78rem;letter-spacing:.03em;text-transform:uppercase;
@@ -220,8 +197,6 @@ ul{list-style:none}
 .chip.scheduled{background:var(--blue,#4f8ef0);background:color-mix(in srgb, var(--blue) 16%, transparent);color:var(--blue)}
 .chip.gold{background:var(--gold-bg);color:var(--gold)}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-
-/* ---------- 6. Hero / dashboard ---------- */
 .view{padding:var(--sp-6) 0 var(--sp-7)}
 .view-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-5);flex-wrap:wrap}
 .view-title{font-family:var(--font-display);font-size:1.9rem;font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
@@ -232,7 +207,6 @@ ul{list-style:none}
 }
 .section-title::before{content:"";width:3px;height:14px;background:var(--gold);display:block}
 .section{margin-bottom:var(--sp-7)}
-
 .hero-strip{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
   background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--sp-6);
@@ -246,8 +220,6 @@ ul{list-style:none}
 .countdown .seg{text-align:center}
 .countdown .seg b{display:block;font-family:var(--font-mono);font-size:1.4rem}
 .countdown .seg span{font-size:.6rem;color:var(--text-2);text-transform:uppercase}
-
-/* ---------- 7. Grids de cards ---------- */
 .grid{display:grid;gap:var(--sp-3)}
 .grid-3{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
 .grid-2{grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
@@ -259,8 +231,6 @@ ul{list-style:none}
 .empty-state b{display:block;color:var(--text-1);font-size:.95rem;margin-bottom:4px}
 .skeleton{background:linear-gradient(90deg,var(--bg-2) 25%,var(--bg-3) 50%,var(--bg-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--radius-md)}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* ---------- 8. Match card ---------- */
 .match-card{
   background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);
   padding:var(--sp-4);cursor:pointer;transition:.18s var(--ease);position:relative;overflow:hidden;
@@ -282,15 +252,11 @@ ul{list-style:none}
 .fav-star{color:var(--text-2);transition:.15s}
 .fav-star.is-fav{color:var(--gold)}
 .fav-star:hover{color:var(--gold)}
-
-/* ---------- 9. Tabs / filtros ---------- */
 .tab-row{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin-bottom:var(--sp-4);overflow-x:auto}
 .tab-btn{padding:var(--sp-2) var(--sp-4);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
 .tab-btn.active{color:var(--gold);border-color:var(--gold)}
 .filter-row{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-5);align-items:flex-end}
 .select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;font-size:.78rem;color:var(--text-0)}
-
-/* ---------- 10. Standings table ---------- */
 .table{width:100%;border-collapse:collapse;font-size:.82rem}
 .table th{text-align:left;padding:8px 10px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2);border-bottom:1px solid var(--line)}
 .table td{padding:9px 10px;border-bottom:1px solid var(--line-soft)}
@@ -302,8 +268,6 @@ ul{list-style:none}
 .form-dots{display:flex;gap:3px}
 .form-dot{width:7px;height:7px;border-radius:50%}
 .form-dot.W{background:var(--live)} .form-dot.D{background:var(--text-2)} .form-dot.L{background:var(--red)}
-
-/* ---------- 11. Modal / detalhe de jogo ---------- */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(5,7,8,.7);backdrop-filter:blur(3px);z-index:200;
   display:flex;align-items:flex-start;justify-content:center;padding:var(--sp-6) var(--sp-4);overflow-y:auto;
@@ -333,8 +297,6 @@ ul{list-style:none}
 .tl-event{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--line-soft);font-size:.82rem}
 .tl-min{font-family:var(--font-mono);color:var(--gold);font-weight:700;width:38px;flex:none;text-align:right}
 .tl-icon{width:18px;flex:none;text-align:center}
-
-/* ---------- 12. Predição IA ---------- */
 .predict-card{background:var(--bg-1);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:var(--sp-5);position:relative;overflow:hidden}
 .predict-card::before{content:"IA";position:absolute;top:-6px;right:10px;font-family:var(--font-display);font-size:4.5rem;font-weight:900;color:var(--gold-bg);line-height:1;user-select:none}
 .predict-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:var(--sp-2)}
@@ -362,8 +324,6 @@ ul{list-style:none}
 .score-grid td,.score-grid th{padding:4px 6px;text-align:center;font-family:var(--font-mono)}
 .score-grid th{color:var(--text-2);font-weight:700}
 .score-grid td{border:1px solid var(--line-soft);min-width:30px}
-
-/* ---------- 13. Bracket (mata-mata) ---------- */
 .bracket{display:flex;gap:var(--sp-6);overflow-x:auto;padding-bottom:var(--sp-4)}
 .bracket-round{display:flex;flex-direction:column;justify-content:space-around;gap:var(--sp-4);min-width:220px}
 .bracket-round-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);font-weight:700;text-align:center;margin-bottom:var(--sp-2)}
@@ -374,15 +334,11 @@ ul{list-style:none}
 .bm-row.win{color:var(--gold);font-weight:700;background:var(--gold-bg)}
 .bm-team{display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bm-score{font-family:var(--font-mono)}
-
-/* ---------- 14. Estatísticas / gráficos ---------- */
 .chart-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4)}
 .chart-card canvas{width:100%;display:block}
 .legend{display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:var(--sp-3);font-size:.72rem;color:var(--text-1)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
-
-/* ---------- 15. Meu Palpite ---------- */
 .guess-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
 .field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:.66rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.04em;font-weight:700}
@@ -397,8 +353,6 @@ ul{list-style:none}
 .stat-banner .cell{background:var(--bg-1);padding:var(--sp-4);text-align:center}
 .stat-banner .cell b{display:block;font-family:var(--font-mono);font-size:1.7rem;color:var(--gold)}
 .stat-banner .cell span{font-size:.65rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.05em}
-
-/* ---------- 16. Toasts / notificações in-app ---------- */
 .toast-stack{position:fixed;bottom:var(--sp-5);right:var(--sp-5);z-index:300;display:flex;flex-direction:column;gap:var(--sp-2);max-width:320px}
 .toast{
   background:var(--bg-1);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--radius-md);
@@ -408,19 +362,13 @@ ul{list-style:none}
 .toast.live{border-left-color:var(--live)}
 .toast b{display:block;margin-bottom:2px;font-size:.78rem}
 @keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-
-/* ---------- 17. Setup / API key gate ---------- */
 .setup-card{max-width:520px;margin:var(--sp-7) auto;background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-6)}
 .setup-card h2{font-family:var(--font-display);font-size:1.4rem;text-transform:uppercase;margin-bottom:var(--sp-2)}
 .setup-card p{color:var(--text-1);font-size:.85rem;margin-bottom:var(--sp-4);line-height:1.6}
 .setup-card .field{margin-bottom:var(--sp-3)}
 .setup-card a{color:var(--gold);text-decoration:underline}
-
-/* ---------- 18. Footer ---------- */
 .site-footer{border-top:1px solid var(--line);padding:var(--sp-6) 0;margin-top:auto}
 .site-footer .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);font-size:.75rem;color:var(--text-2)}
-
-/* ---------- 19. Responsivo ---------- */
 @media (max-width:720px){
   .container{padding:0 var(--sp-4)}
   .view-title{font-size:1.4rem}
@@ -429,8 +377,6 @@ ul{list-style:none}
   .nav-link{font-size:.66rem}
   .hero-cell{padding:var(--sp-3)}
 }
-
-/* ---------- 20. Animações utilitárias ---------- */
 .fade-in{animation:fadeIn .35s var(--ease) both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .reveal-stagger > *{animation:fadeIn .4s var(--ease) both}
@@ -438,8 +384,6 @@ ul{list-style:none}
 .reveal-stagger > *:nth-child(3){animation-delay:.08s} .reveal-stagger > *:nth-child(4){animation-delay:.11s}
 .reveal-stagger > *:nth-child(5){animation-delay:.14s} .reveal-stagger > *:nth-child(6){animation-delay:.17s}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
-
-/* ---------- 21. Novos componentes (palpites / favoritos / estatísticas / previsão) ---------- */
 .comp-tab-row{display:flex;gap:var(--sp-1);flex-wrap:wrap;margin-bottom:var(--sp-4)}
 .comp-tab{padding:7px 13px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--bg-2);color:var(--text-1);border:1px solid var(--line)}
 .comp-tab.active{background:var(--gold);color:#1a1306;border-color:var(--gold)}
@@ -470,7 +414,6 @@ ul{list-style:none}
 <body>
 <div class="app-shell">
 
-  <!-- ===================== HEADER ===================== -->
   <header class="site-header">
     <div class="container">
       <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menu" aria-expanded="false">
@@ -479,8 +422,6 @@ ul{list-style:none}
       <a href="#/" class="brand"><span class="dot"></span>WORLD<b>CUP</b>·AI</a>
 
       <nav class="main-nav" id="mainNav">
-        <!-- links principais -->
-        
         <a class="nav-link" href="#/jogos" data-route="/jogos">Jogos</a>
         <a class="nav-link" href="#/classificacao" data-route="/classificacao">Classificação</a>
         <a class="nav-link" href="#/mata-mata" data-route="/mata-mata">Mata-mata</a>
@@ -489,7 +430,6 @@ ul{list-style:none}
         <a class="nav-link" href="#/palpites" data-route="/palpites">Meus Palpites</a>
         <a class="nav-link" href="#/favoritos" data-route="/favoritos">Favoritos</a>
 
-        <!-- ações (busca + botões) – visíveis em desktop e mobile (dentro do menu) -->
         <div class="nav-actions">
           <div class="search-box">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -512,10 +452,8 @@ ul{list-style:none}
     </div>
   </header>
 
-  <!-- ===================== MAIN / ROTAS ===================== -->
   <main id="appMain" class="container view"></main>
 
-  <!-- ===================== FOOTER ===================== -->
   <footer class="site-footer">
     <div class="container">
       <span>WorldCup AI — projeto pessoal, sem fins comerciais. Dados: <a href="https://www.football-data.org" target="_blank" rel="noopener" style="color:var(--gold)">football-data.org</a></span>
@@ -524,7 +462,7 @@ ul{list-style:none}
   </footer>
 </div>
 
-<!-- ===================== MODAL (detalhe de jogo) ===================== -->
+<!-- MODAL DETALHE DE JOGO -->
 <div class="modal-overlay" id="matchModal">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-head">
@@ -538,7 +476,7 @@ ul{list-style:none}
   </div>
 </div>
 
-<!-- ===================== MODAL (configurar API key) ===================== -->
+<!-- MODAL CONFIGURAÇÕES -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal" style="max-width:480px" role="dialog" aria-modal="true">
     <div class="modal-head">
@@ -555,7 +493,8 @@ ul{list-style:none}
       </p>
       <div class="field">
         <label for="apiKeyInput">Chave da API (football-data.org)</label>
-        <input id="apiKeyInput" type="text" placeholder="Cole sua chave gratuita aqui">
+        <!-- ALTERAÇÃO: autocomplete="off" e name personalizado para evitar auto-complete -->
+        <input id="apiKeyInput" type="text" placeholder="Cole sua chave gratuita aqui" autocomplete="off" name="apikey-field">
       </div>
       <p style="font-size:.78rem;color:var(--text-2);margin:6px 0 var(--sp-4)">
         Crie uma chave gratuita em <a href="https://www.football-data.org/client/register" target="_blank" rel="noopener" style="color:var(--gold)">football-data.org/client/register</a>.
@@ -583,18 +522,12 @@ ul{list-style:none}
 <div class="toast-stack" id="toastStack"></div>
 
 <script>
-/* =====================================================================
-   WORLDCUP AI — JAVASCRIPT
-   Organizado em módulos via IIFE (sem build step, sem frameworks).
-   Módulos: Utils, Store, Api, Theme, Toast, Favorites, Guesses,
-            Notify, Predict, Charts, Router, Views, App
-   ===================================================================== */
 (function(){
 "use strict";
 
-/* ----------------------------------------------------------------
-   1. UTILS — funções puras de apoio
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   1. UTILS
+   ===================================================================== */
 const Utils = (function(){
   function $(sel, ctx){ return (ctx||document).querySelector(sel); }
   function $all(sel, ctx){ return Array.from((ctx||document).querySelectorAll(sel)); }
@@ -619,7 +552,6 @@ const Utils = (function(){
   }
   function fmtDateTime(iso){ return fmtDate(iso) + " · " + fmtTime(iso); }
   function fmtISODate(d){
-    // yyyy-mm-dd para inputs type=date
     const dt = (d instanceof Date) ? d : new Date(d);
     return dt.toISOString().slice(0,10);
   }
@@ -670,9 +602,9 @@ const Utils = (function(){
   return { $, $all, el, fmtDate, fmtTime, fmtDateTime, fmtISODate, timeAgo, initials, crestImg, statusLabel, stageLabel, debounce, clamp, uid, normalize };
 })();
 
-/* ----------------------------------------------------------------
-   2. STORE — persistência local (config, cache com TTL, etc.)
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   2. STORE
+   ===================================================================== */
 const Store = (function(){
   const NS = "wcai:";
   function get(key, fallback){
@@ -681,8 +613,6 @@ const Store = (function(){
   }
   function set(key, val){ try{ localStorage.setItem(NS+key, JSON.stringify(val)); }catch(e){} }
   function remove(key){ localStorage.removeItem(NS+key); }
-
-  // cache com TTL (reduz chamadas — plano free = 10 req/min)
   function cacheGet(key){
     const entry = get("cache:"+key, null);
     if(!entry) return null;
@@ -695,24 +625,16 @@ const Store = (function(){
   return { get, set, remove, cacheGet, cacheSet };
 })();
 
-/* ----------------------------------------------------------------
-   3. API — camada de acesso à football-data.org (v4)
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   3. API
+   ===================================================================== */
 const Api = (function(){
   const BASE = "https://api.football-data.org/v4";
-  // chave padrão embutida, pra abrir e já funcionar sem precisar configurar nada.
-  // Pode ser sobrescrita em Configurações (ícone de engrenagem) por qualquer pessoa
-  // que queira usar a própria chave — útil se muita gente acessar ao mesmo tempo,
-  // já que o limite de requisições por minuto é compartilhado entre quem usa essa chave.
   const DEFAULT_API_KEY = "8784fc6c802e4116b6229330f88405da";
   const COMPETITIONS = ["WC","CL","EC","PL","BL1","SA","PD","BSA"];
   let queue = [];
   let processing = false;
-  const FALLBACK_GAP = 6200; // só usado antes de recebermos o 1º header real da API
-
-  // throttling adaptativo: lido a cada resposta dos headers reais da API
-  // (X-Requests-Available-Minute / X-RequestCounter-Reset), conforme orientação
-  // da própria football-data.org — evita chute fixo e se adapta ao plano do usuário.
+  const FALLBACK_GAP = 6200;
   let remainingThisMinute = null;
   let resetInSeconds = null;
 
@@ -727,8 +649,6 @@ const Api = (function(){
   }
 
   function nextGapMs(){
-    // se a API já nos disse quantas requisições sobram nesse minuto, usamos isso
-    // pra espaçar o que falta até o reset; senão caímos no intervalo de segurança.
     if(remainingThisMinute != null && resetInSeconds != null){
       if(remainingThisMinute <= 1) return Math.max(1000, resetInSeconds * 1000 + 250);
       return Math.max(300, (resetInSeconds * 1000) / Math.max(1, remainingThisMinute));
@@ -745,11 +665,6 @@ const Api = (function(){
     });
   }
 
-  // A API da football-data.org atualmente só libera CORS para a origem exata
-  // "http://localhost" (sem porta) — bloqueia 127.0.0.1, Live Server, GitHub Pages etc.
-  // Para continuar 100% estático (sem backend), roteamos pelo corsproxy.io, que já
-  // libera de graça origens como localhost, 127.0.0.1 e *.github.io e repassa os
-  // headers (incluindo X-Auth-Token) pro destino real.
   function buildUrl(path){
     const real = BASE + path;
     return "https://corsproxy.io/?url=" + encodeURIComponent(real);
@@ -779,8 +694,6 @@ const Api = (function(){
     }
   }
 
-  // lê os headers reais de throttling que a football-data.org devolve em toda resposta,
-  // pra adaptar o ritmo das próximas chamadas em vez de usar um intervalo fixo no chute.
   function readThrottleHeaders(res){
     const avail = res.headers.get("X-Requests-Available-Minute");
     const reset = res.headers.get("X-RequestCounter-Reset");
@@ -793,7 +706,6 @@ const Api = (function(){
     if(node) node.textContent = "api: " + s;
   }
 
-  // get com cache. ttlMs default 60s para dados "vivos", maior para dados estáveis.
   async function get(path, ttlMs){
     ttlMs = ttlMs == null ? 60000 : ttlMs;
     const cached = Store.cacheGet(path);
@@ -804,7 +716,6 @@ const Api = (function(){
   }
 
   function invalidate(prefix){
-    // limpa cache cujo path comece com prefix (força refresh manual)
     const ks = Object.keys(localStorage);
     ks.forEach(k => { if(k.startsWith("wcai:cache:"+prefix)) localStorage.removeItem(k); });
   }
@@ -823,9 +734,9 @@ const Api = (function(){
   };
 })();
 
-/* ----------------------------------------------------------------
-   4. THEME — claro/escuro
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   4. THEME
+   ===================================================================== */
 const Theme = (function(){
   function init(){
     const saved = Store.get("theme", "dark");
@@ -840,9 +751,9 @@ const Theme = (function(){
   return { init, toggle };
 })();
 
-/* ----------------------------------------------------------------
-   4b. PROFILE — nome do usuário, usado para personalizar o painel
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   4b. PROFILE
+   ===================================================================== */
 const Profile = (function(){
   function getName(){ return (Store.get("userName","")||"").trim(); }
   function setName(n){ Store.set("userName", (n||"").trim()); }
@@ -853,9 +764,9 @@ const Profile = (function(){
   return { getName, setName, greeting };
 })();
 
-/* ----------------------------------------------------------------
-   5. TOAST — avisos in-app (espelha notificações nativas)
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   5. TOAST
+   ===================================================================== */
 const Toast = (function(){
   function show(title, msg, opts){
     opts = opts || {};
@@ -870,15 +781,13 @@ const Toast = (function(){
   return { show };
 })();
 
-/* ----------------------------------------------------------------
-   6. FAVORITES — times (por competição) e jogos favoritos
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   6. FAVORITES
+   ===================================================================== */
 const Favorites = (function(){
   const DEFAULT_SHAPE = { teamsByComp:{}, matches:[] };
 
   function migrate(raw){
-    // formato antigo: { teams:[ids...], matches:[ids...] } sem separação por competição.
-    // migramos para teamsByComp usando a competição configurada no momento, sem perder dados.
     if(raw && Array.isArray(raw.teams) && !raw.teamsByComp){
       const comp = Api.getComp();
       const shaped = { teamsByComp: { [comp]: raw.teams.slice() }, matches: raw.matches||[] };
@@ -893,7 +802,6 @@ const Favorites = (function(){
   function getAll(){ return migrate(Store.get("favorites", null)); }
   function getTeamsForComp(comp){ return getAll().teamsByComp[comp] || []; }
   function getAllTeamsFlat(){
-    // [{id, comp}] — usado pra notificações que não dependem da competição ativa
     const f = getAll(); const out = [];
     Object.keys(f.teamsByComp).forEach(comp => f.teamsByComp[comp].forEach(id => out.push({ id, comp })));
     return out;
@@ -918,9 +826,9 @@ const Favorites = (function(){
   return { getAll, getTeamsForComp, getAllTeamsFlat, isFavTeam, isFavMatch, toggleTeam, toggleMatch, countForComp };
 })();
 
-/* ----------------------------------------------------------------
-   7. GUESSES — "Meu Palpite" (sem dinheiro, só pra brincar)
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   7. GUESSES
+   ===================================================================== */
 const Guesses = (function(){
   function all(){ return Store.get("guesses", {}); }
   function save(matchId, guess){
@@ -931,7 +839,6 @@ const Guesses = (function(){
   function get(matchId){ return all()[matchId] || null; }
   function remove(matchId){ const g = all(); delete g[matchId]; Store.set("guesses", g); }
 
-  // compara palpite com resultado real após o jogo terminar
   function evaluate(matchId, match){
     const g = get(matchId);
     if(!g || g.checked) return g;
@@ -942,9 +849,9 @@ const Guesses = (function(){
     const realResult = realHome > realAway ? "HOME" : (realHome < realAway ? "AWAY" : "DRAW");
     const guessResult = Number(g.home) > Number(g.away) ? "HOME" : (Number(g.home) < Number(g.away) ? "AWAY" : "DRAW");
     hits.vencedor = realResult === guessResult;
-    if(g.corners !== undefined && g.corners !== "") hits.escanteios = null; // API free não fornece escanteios reais — marcado como não verificável
+    if(g.corners !== undefined && g.corners !== "") hits.escanteios = null;
     let score = 0, possible = 1;
-    if(hits.placarExato) score += 2; possible += 1; // placar vale mais
+    if(hits.placarExato) score += 2; possible += 1;
     if(hits.vencedor) score += 1;
     g.checked = true; g.hits = hits; g.points = score; g.possible = possible + 1;
     const all_ = all(); all_[matchId] = g; Store.set("guesses", all_);
@@ -971,13 +878,13 @@ const Guesses = (function(){
   return { all, save, get, remove, evaluate, stats };
 })();
 
-/* ----------------------------------------------------------------
-   8. NOTIFY — notificações nativas do navegador
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   8. NOTIFY
+   ===================================================================== */
 const Notify = (function(){
   let permissionAsked = false;
   let pollTimer = null;
-  let knownState = Store.get("matchStates", {}); // matchId -> { status, homeScore, awayScore }
+  let knownState = Store.get("matchStates", {});
   let onUpdateCallbacks = [];
 
   function onUpdate(fn){ onUpdateCallbacks.push(fn); }
@@ -1054,20 +961,15 @@ const Notify = (function(){
   return { requestPermission, updateBtn, diffAndNotify, startPolling, stopPolling, onUpdate };
 })();
 
-/* ----------------------------------------------------------------
-   9. PREDICT — motor de previsão (estatístico, não-ML)
-   Baseado em: forma recente, média de gols, mando de campo,
-   saldo de gols e posição na tabela (quando disponível).
-   Usa aproximação de Poisson para distribuição de placares.
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   9. PREDICT
+   ===================================================================== */
 const Predict = (function(){
-
   function poisson(lambda, k){
     return (Math.pow(lambda,k) * Math.exp(-lambda)) / factorial(k);
   }
   function factorial(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
 
-  // calcula "força" de ataque/defesa a partir do histórico de partidas finalizadas de um time
   function teamForm(teamId, finishedMatches){
     const played = finishedMatches.filter(m => m.status === "FINISHED" && (m.homeTeam.id===teamId || m.awayTeam.id===teamId));
     if(played.length === 0) return null;
@@ -1084,13 +986,11 @@ const Predict = (function(){
     return { gfAvg: gf/n, gaAvg: ga/n, w,d,l, n, formSeq, winRate: w/n };
   }
 
-  // gera previsão completa para um confronto
   function predictMatch(home, away, ctx){
     ctx = ctx || {};
     const homeForm = teamForm(home.id, ctx.matches||[]);
     const awayForm = teamForm(away.id, ctx.matches||[]);
 
-    // baseline da competição (média histórica ~2.6 gols/jogo em Copas)
     const BASE = 1.35;
     const HOME_ADV = 1.12;
 
@@ -1100,12 +1000,11 @@ const Predict = (function(){
     if(homeForm) lambdaHome = (homeForm.gfAvg*0.65 + (awayForm? awayForm.gaAvg*0.35 : BASE*0.35)) * HOME_ADV;
     if(awayForm) lambdaAway = (awayForm.gfAvg*0.65 + (homeForm? homeForm.gaAvg*0.35 : BASE*0.35));
 
-    // ajuste por posição na tabela, se disponível
     if(ctx.standings){
       const hPos = findPosition(ctx.standings, home.id);
       const aPos = findPosition(ctx.standings, away.id);
       if(hPos && aPos){
-        const diff = (aPos - hPos) / 16; // normalizado
+        const diff = (aPos - hPos) / 16;
         lambdaHome *= Utils.clamp(1 + diff*0.18, 0.6, 1.6);
         lambdaAway *= Utils.clamp(1 - diff*0.18, 0.6, 1.6);
       }
@@ -1113,7 +1012,6 @@ const Predict = (function(){
     lambdaHome = Utils.clamp(lambdaHome, 0.25, 4.5);
     lambdaAway = Utils.clamp(lambdaAway, 0.25, 4.5);
 
-    // matriz de placares via Poisson (0..6 gols)
     const MAXG = 6;
     let grid = [];
     let pHome=0, pDraw=0, pAway=0, pBTTS=0, pOver25=0;
@@ -1132,7 +1030,6 @@ const Predict = (function(){
     const total = pHome+pDraw+pAway;
     pHome/=total; pDraw/=total; pAway/=total;
 
-    // nível de confiança = função da quantidade de dados disponíveis
     let dataPoints = (homeForm?homeForm.n:0) + (awayForm?awayForm.n:0);
     let confidence = Utils.clamp(40 + dataPoints*5, 35, 92);
     if(ctx.standings) confidence = Utils.clamp(confidence + 6, 35, 95);
@@ -1166,9 +1063,9 @@ const Predict = (function(){
   return { predictMatch, teamForm };
 })();
 
-/* ----------------------------------------------------------------
-   10. CHARTS — gráficos em <canvas> puro (sem libs externas)
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   10. CHARTS
+   ===================================================================== */
 const Charts = (function(){
   function setupCanvas(canvas){
     const ratio = window.devicePixelRatio || 1;
@@ -1276,7 +1173,7 @@ const Charts = (function(){
     });
   }
 
-  function donutChart(canvas, segments){ // [{label,value,color}]
+  function donutChart(canvas, segments){
     const { ctx, w, h } = setupCanvas(canvas);
     ctx.clearRect(0,0,w,h);
     const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 10, rIn = r*0.62;
@@ -1296,7 +1193,7 @@ const Charts = (function(){
     ctx.fillText(Math.round((segments[0].value/total)*100)+"%", cx, cy);
   }
 
-  function radarChart(canvas, labels, series){ // series: [{label,data:[0..1],color}]
+  function radarChart(canvas, labels, series){
     const { ctx, w, h } = setupCanvas(canvas);
     ctx.clearRect(0,0,w,h);
     const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 28;
@@ -1336,9 +1233,9 @@ const Charts = (function(){
   return { barChart, groupedBarChart, lineChart, donutChart, radarChart };
 })();
 
-/* ----------------------------------------------------------------
-   11. ROUTER — hash router simples
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   11. ROUTER
+   ===================================================================== */
 const Router = (function(){
   const routes = {};
   let currentPath = "/";
@@ -1351,7 +1248,6 @@ const Router = (function(){
     currentPath = "/" + (segs[0]||"");
     Utils.$all(".nav-link").forEach(a => a.classList.toggle("active", a.dataset.route === "/"+ (segs[0]||"")));
 
-    // fecha o menu mobile sempre que a rota muda
     const nav = document.getElementById("mainNav");
     const hb = document.getElementById("hamburgerBtn");
     if(nav && nav.classList.contains("open")){
@@ -1379,9 +1275,9 @@ const Router = (function(){
   return { on, init, resolve, current };
 })();
 
-/* ----------------------------------------------------------------
-   12. VIEWS — construção das telas
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   12. VIEWS — Construção das telas
+   ===================================================================== */
 const Views = (function(){
   const main = () => document.getElementById("appMain");
 
@@ -1420,7 +1316,6 @@ const Views = (function(){
     return box;
   }
 
-  /* ---------- match card ---------- */
   function matchCard(m){
     const isLive = m.status === "IN_PLAY" || m.status === "PAUSED";
     const card = Utils.el("div", { class:"match-card fade-in", tabindex:"0", role:"button" });
@@ -1497,46 +1392,89 @@ const Views = (function(){
 
     async function paint(invalidateFirst){
       try{
-        if(invalidateFirst) Api.invalidate("/competitions/"+comp+"/matches");
-        const data = await Api.matches(comp, "");
-        const matches = data.matches || [];
-        Notify.diffAndNotify(matches);
+        if(invalidateFirst) {
+          Api.invalidate("/competitions/" + comp + "/matches");
+          Api.invalidate("/competitions/" + comp + "/matches?status=LIVE");
+        }
+
+        // busca lista geral E partidas ao vivo em paralelo
+        const [data, liveData] = await Promise.all([
+          Api.matches(comp, ""),
+          Api.matches(comp, "?status=LIVE").catch(() => ({ matches: [] }))
+        ]);
+
+        const allMatches = data.matches || [];
+        const liveMatchesFromApi = liveData.matches || [];
+
+        // mescla os dados: para cada partida ao vivo, prevalece a versão do endpoint LIVE
+        const liveMap = new Map();
+        liveMatchesFromApi.forEach(m => liveMap.set(m.id, m));
 
         const now = Date.now();
-        // "ao vivo" = status IN_PLAY/PAUSED OU jogos cujo horário de início já passou
-        // mas a API ainda não atualizou o status (evita sumiço do jogo do dia).
-        const live = matches.filter(m => m.status==="IN_PLAY"||m.status==="PAUSED");
-        const justKickedOff = matches.filter(m => (m.status==="SCHEDULED"||m.status==="TIMED")
-          && new Date(m.utcDate).getTime() <= now
-          && new Date(m.utcDate).getTime() > now - (3*60*60*1000)); // até 3h após o horário previsto
+        const live = [];
+        const justKickedOff = [];
+
+        allMatches.forEach(m => {
+          const fresh = liveMap.get(m.id) || m;
+          if (fresh.status === "IN_PLAY" || fresh.status === "PAUSED") {
+            live.push(fresh);
+          } else if (
+            (fresh.status === "SCHEDULED" || fresh.status === "TIMED") &&
+            new Date(fresh.utcDate).getTime() <= now &&
+            new Date(fresh.utcDate).getTime() > now - 3 * 60 * 60 * 1000
+          ) {
+            justKickedOff.push(fresh);
+          }
+        });
+
         const liveCombined = [...live, ...justKickedOff];
 
-        const upcoming = matches.filter(m => (m.status==="SCHEDULED"||m.status==="TIMED") && new Date(m.utcDate).getTime() > now)
-                                 .sort((a,b)=> new Date(a.utcDate)-new Date(b.utcDate)).slice(0,6);
-        const finished = matches.filter(m => m.status==="FINISHED").sort((a,b)=> new Date(b.utcDate)-new Date(a.utcDate)).slice(0,6);
-        const favIds = Favorites.getTeamsForComp(comp);
-        const favMatches = matches.filter(m => favIds.includes(m.homeTeam.id) || favIds.includes(m.awayTeam.id)).slice(0,6);
+        // para jogos que ainda estão como SCHEDULED mas já passaram da hora,
+        // tenta buscar detalhe individual para pegar status real
+        const refreshedKickedOff = await Promise.all(
+          justKickedOff.map(async (m) => {
+            try {
+              const detail = await Api.matchDetail(m.id);
+              if (detail && detail.match) return detail.match;
+            } catch (e) { /* silencia erro individual */ }
+            return m;
+          })
+        );
 
-        // próximo jogo "inteligente": se já tem jogo rolando/começando, o próximo da contagem
-        // é o primeiro realmente agendado; senão é o mais próximo no tempo.
+        const finalLive = [...live, ...refreshedKickedOff];
+
+        const upcoming = allMatches
+          .filter(m => (m.status === "SCHEDULED" || m.status === "TIMED") && new Date(m.utcDate).getTime() > now)
+          .sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate))
+          .slice(0, 6);
+
+        const finished = allMatches
+          .filter(m => m.status === "FINISHED")
+          .sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate))
+          .slice(0, 6);
+
+        const favIds = Favorites.getTeamsForComp(comp);
+        const favMatches = allMatches
+          .filter(m => favIds.includes(m.homeTeam.id) || favIds.includes(m.awayTeam.id))
+          .slice(0, 6);
+
         const nextForCountdown = upcoming[0];
 
-        // hero strip
         heroWrap.innerHTML = "";
         heroWrap.append(
-          heroCell("Jogos ao vivo", String(liveCombined.length), liveCombined.length?"live":""),
+          heroCell("Jogos ao vivo", String(finalLive.length), finalLive.length ? "live" : ""),
           heroCell("Próximo jogo", nextForCountdown ? Utils.fmtDateTime(nextForCountdown.utcDate) : "—"),
           heroCellCountdown(nextForCountdown),
           heroCell("Jogos finalizados", String(finished.length)),
-          heroCell("Total de partidas", String(matches.length))
+          heroCell("Total de partidas", String(allMatches.length))
         );
 
-        fillSection(liveSec, liveCombined, "Nenhum jogo ao vivo agora.");
+        fillSection(liveSec, finalLive, "Nenhum jogo ao vivo agora.");
         fillSection(nextSec, upcoming, "Nenhum jogo agendado encontrado.");
         fillSection(lastSec, finished, "Ainda não há resultados.");
         fillSection(favSec, favMatches, favIds.length ? "Nenhum jogo dos seus favoritos nesta competição." : "Favorite times em Favoritos para vê-los aqui.");
 
-        return liveCombined.length > 0;
+        return finalLive.length > 0;
       }catch(err){
         heroWrap.innerHTML = ""; heroWrap.style.display="none";
         [liveSec, nextSec, lastSec, favSec].forEach(s => { s.body.innerHTML=""; s.body.appendChild(errorState(err, renderHome)); });
@@ -1545,7 +1483,6 @@ const Views = (function(){
     }
 
     const hasLive = await paint(false);
-    // enquanto a Home estiver aberta, atualiza sozinha a cada 30s (mais rápido se há jogo ao vivo)
     homeAutoTimer = setInterval(() => {
       if(Router.current() !== "/") { clearInterval(homeAutoTimer); homeAutoTimer = null; return; }
       if(document.hidden) return;
@@ -1589,7 +1526,7 @@ const Views = (function(){
     items.forEach(m => sec.body.appendChild(matchCard(m)));
   }
 
-  /* ---------- JOGOS (lista com filtros) ---------- */
+  /* ---------- JOGOS ---------- */
   async function renderMatches(){
     const comp = Api.getComp();
     main().innerHTML = "";
@@ -1636,7 +1573,7 @@ const Views = (function(){
     load();
   }
 
-  /* ---------- DETALHE DE JOGO (modal) ---------- */
+  /* ---------- DETALHE DE JOGO (MODAL) ---------- */
   async function openMatchModal(matchId){
     const overlay = document.getElementById("matchModal");
     const bodyEl = document.getElementById("modalBody");
@@ -1672,7 +1609,6 @@ const Views = (function(){
     ]);
     bodyEl.appendChild(scoreboard);
 
-    // tabs
     const tabs = Utils.el("div", { class:"modal-tabs" });
     const panels = {};
     [["info","Informações"],["eventos","Linha do tempo"],["previsao","Previsão IA"],["palpite","Meu palpite"]].forEach(([k,label],i) => {
@@ -1693,7 +1629,6 @@ const Views = (function(){
     panels.palpite = guessPanel(m);
     Object.entries(panels).forEach(([k,p],i) => { if(i!==0) p.classList.add("hidden"); bodyEl.appendChild(p); });
 
-    // carrega previsão de forma assíncrona (depende de mais chamadas de API)
     loadPrediction(m, panels.previsao);
   }
 
@@ -1710,7 +1645,6 @@ const Views = (function(){
     items.forEach(([l,v]) => grid.appendChild(Utils.el("div",{class:"info-item"},[Utils.el("div",{class:"lbl"},[l]), Utils.el("div",{class:"val"},[String(v)])])));
     const wrap = Utils.el("div", {}, [grid]);
 
-    // cartões/gols/substituições — quando disponíveis no plano da API
     const cards = (m.bookings||[]);
     if(cards.length){
       wrap.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:20px"},["Cartões"]));
@@ -1796,7 +1730,6 @@ const Views = (function(){
     ]);
     card.appendChild(grid);
 
-    // matriz de placares mais prováveis (top 6)
     const flatScores = [];
     for(let h=0;h<p.grid.length;h++) for(let a=0;a<p.grid[h].length;a++) flatScores.push({h,a,p:p.grid[h][a]});
     flatScores.sort((a,b)=>b.p-a.p);
@@ -1853,7 +1786,6 @@ const Views = (function(){
     return wrap;
   }
 
-  // formulário reaproveitável de palpite (usado no modal e na página /palpites)
   function buildGuessForm(m, existing, onSaved){
     const wrap = Utils.el("div", {});
     wrap.appendChild(Utils.el("p",{style:"font-size:.8rem;color:var(--text-1)"},["Registre seu palpite antes do apito inicial. Tudo fica salvo só no seu navegador — sem dinheiro, é só pra fixar e ver depois se acertou 😉"]));
@@ -1993,7 +1925,7 @@ const Views = (function(){
     return bm;
   }
 
-  /* ---------- ESTATÍSTICAS (análise profunda com filtros) ---------- */
+  /* ---------- ESTATÍSTICAS ---------- */
   async function renderStats(){
     const comp = Api.getComp();
     main().innerHTML = "";
@@ -2034,7 +1966,6 @@ const Views = (function(){
     switchPanel("geral");
   }
 
-  // -------- toolbar de período reutilizável: retorna {wrap, getRange()} --------
   function periodToolbar(matches, onChange){
     const dates = matches.map(m=>new Date(m.utcDate).getTime()).filter(Boolean);
     const minD = dates.length ? Utils.fmtISODate(Math.min(...dates)) : "";
@@ -2201,7 +2132,6 @@ const Views = (function(){
         c2.wrap.appendChild(legendFor([[teamA.shortName||teamA.name,"#e0a72e"],[teamB.shortName||teamB.name,"#4f8ef0"]]));
       });
 
-      // confrontos diretos dentro dos jogos carregados desta competição
       const h2h = allMatches.filter(m=>m.status==="FINISHED" && ((m.homeTeam.id===idA&&m.awayTeam.id===idB)||(m.homeTeam.id===idB&&m.awayTeam.id===idA)));
       body.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:8px"},["Confrontos diretos nesta competição"]));
       if(!h2h.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum confronto direto encontrado nos dados carregados desta competição."])); return; }
@@ -2363,7 +2293,6 @@ const Views = (function(){
 
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
 
-    // ---- novo palpite: escolhe um jogo agendado direto nesta página ----
     const newSec = Utils.el("div",{class:"section"});
     newSec.appendChild(Utils.el("div",{class:"section-title"},["Novo palpite"]));
     const quickCard = Utils.el("div",{class:"quick-guess-card"});
@@ -2383,7 +2312,6 @@ const Views = (function(){
       const byId = {}; matches.forEach(m=>byId[m.id]=m);
       const upcoming = matches.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED").sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
 
-      // quick-guess: select de jogo + formulário inline
       quickCard.innerHTML = "";
       if(!upcoming.length){
         quickCard.appendChild(Utils.el("div",{class:"empty-state"},["Não há jogos agendados nesta competição no momento."]));
@@ -2404,7 +2332,6 @@ const Views = (function(){
         };
       }
 
-      // histórico
       listBody.innerHTML = "";
       const guesses = Guesses.all();
       const ids = Object.keys(guesses);
@@ -2431,7 +2358,7 @@ const Views = (function(){
     }
   }
 
-  /* ---------- FAVORITOS (busca + favoritar por competição) ---------- */
+  /* ---------- FAVORITOS ---------- */
   async function renderFavorites(){
     main().innerHTML = "";
     main().appendChild(Utils.el("div", { class:"view-head" }, [
@@ -2439,7 +2366,6 @@ const Views = (function(){
     ]));
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
 
-    // abas por competição
     const compTabRow = Utils.el("div",{class:"comp-tab-row"});
     main().appendChild(compTabRow);
     let activeComp = Api.getComp();
@@ -2450,7 +2376,6 @@ const Views = (function(){
       tabs[c]=t; compTabRow.appendChild(t);
     });
 
-    // busca para adicionar favorito dentro da competição ativa
     const searchSec = Utils.el("div",{class:"section"});
     searchSec.appendChild(Utils.el("div",{class:"section-title"},["Adicionar favorito"]));
     const searchInput = Utils.el("input",{class:"select",style:"width:100%;max-width:360px",type:"text",placeholder:"Digite o nome do time…"});
@@ -2465,7 +2390,7 @@ const Views = (function(){
     favSec.appendChild(favGrid);
     main().appendChild(favSec);
 
-    let teamsCache = {}; // comp -> teams[]
+    let teamsCache = {};
     async function getTeamsFor(comp){
       if(teamsCache[comp]) return teamsCache[comp];
       const data = await Api.teams(comp).catch(()=>({teams:[]}));
@@ -2597,12 +2522,16 @@ const Views = (function(){
   };
 })();
 
-/* ----------------------------------------------------------------
-   13. APP — bootstrap, eventos globais e configurações
-   ---------------------------------------------------------------- */
+/* =====================================================================
+   13. APP — bootstrap e eventos
+   ===================================================================== */
 function openSettings(){
   document.getElementById("userNameInput").value = Profile.getName();
-  document.getElementById("apiKeyInput").value = Api.getKey();
+  // NÃO preenche mais a chave automaticamente — campo inicia vazio
+  document.getElementById("apiKeyInput").value = "";
+  document.getElementById("apiKeyInput").placeholder = Api.getKey()
+    ? "Deixe em branco para manter a chave atual"
+    : "Cole sua chave gratuita aqui";
   document.getElementById("compSelect").value = Api.getComp();
   document.getElementById("settingsModal").classList.add("open");
 }
@@ -2622,7 +2551,6 @@ function initApp(){
   Theme.init();
   Notify.updateBtn();
 
-  // rotas
   Router.on("/", Views.renderHome);
   Router.on("/jogos", Views.renderMatches);
   Router.on("/jogos/match", (id) => { Views.openMatchModal(id); });
@@ -2635,7 +2563,6 @@ function initApp(){
   Router.on("/time", Views.renderTeam);
   Router.init();
 
-  // menu hamburguer (mobile): abre/fecha e retrai ao clicar num link ou fora dele
   document.getElementById("hamburgerBtn").onclick = (e) => { e.stopPropagation(); toggleMobileNav(); };
   document.getElementById("mainNav").addEventListener("click", (e) => {
     if(e.target.closest(".nav-link")) toggleMobileNav(false);
@@ -2648,7 +2575,6 @@ function initApp(){
   });
   window.addEventListener("resize", Utils.debounce(() => { if(window.innerWidth > 860) toggleMobileNav(false); }, 150));
 
-  // header actions
   document.getElementById("themeBtn").onclick = Theme.toggle;
   document.getElementById("notifyBtn").onclick = Notify.requestPermission;
   document.getElementById("refreshBtn").onclick = () => { Api.invalidate(""); Router.resolve(); Toast.show("Atualizado", "Dados recarregados da API."); };
@@ -2659,24 +2585,32 @@ function initApp(){
   document.getElementById("matchModal").addEventListener("click", (e)=>{ if(e.target.id==="matchModal"){ closeMatchModal(); location.hash="#/jogos"; } });
   document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeSettings(); closeMatchModal(); toggleMobileNav(false); } });
 
+  // ALTERAÇÃO: manter chave existente se campo vier vazio
   document.getElementById("saveSettingsBtn").onclick = () => {
     const name = document.getElementById("userNameInput").value.trim();
-    const key = document.getElementById("apiKeyInput").value.trim();
+    const keyInput = document.getElementById("apiKeyInput").value.trim();
     const comp = document.getElementById("compSelect").value;
-    if(!key){ document.getElementById("settingsMsg").textContent = "Cole uma chave válida."; return; }
+
+    // Se o campo veio vazio e já existe uma chave, mantém a chave atual
+    const key = keyInput || Api.getKey();
+
+    if (!key) {
+      document.getElementById("settingsMsg").textContent = "É necessário informar uma chave da API.";
+      return;
+    }
+
     Profile.setName(name);
-    Store.set("apiKey", key); Store.set("competition", comp);
+    Store.set("apiKey", key);
+    Store.set("competition", comp);
     Api.invalidate("");
     closeSettings();
-    Toast.show("Configurado!" + (name ? " Valeu, "+name+"!" : ""), "Carregando dados da competição "+comp+"…");
+    Toast.show("Configurado!" + (name ? " Valeu, " + name + "!" : ""), "Carregando dados da competição " + comp + "…");
     Router.resolve();
   };
 
-  // busca
   const searchInput = document.getElementById("searchInput");
   searchInput.addEventListener("keydown", Utils.debounce((e) => {
     if(e.key === "Enter" && searchInput.value.trim()){
-      // busca simples: filtra na página de jogos pelo nome do time
       location.hash = "#/jogos";
       setTimeout(() => {
         const q = searchInput.value.trim().toLowerCase();
@@ -2688,14 +2622,12 @@ function initApp(){
     }
   }, 150));
 
-  // notificações: poll periódico de partidas ao vivo
   Notify.startPolling(async () => {
     if(!Api.getKey()) return [];
     const data = await Api.matches(Api.getComp(), "");
     return data.matches || [];
   });
 
-  // se um gol/início/fim de jogo acontecer enquanto a Home está aberta, atualiza na hora
   Notify.onUpdate(() => { if(Router.current() === "/") Views.renderHome(); });
 }
 
