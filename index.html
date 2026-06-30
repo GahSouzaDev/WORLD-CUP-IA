@@ -109,6 +109,33 @@ ul{list-style:none}
 .search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-2);pointer-events:none}
 @media (min-width:880px){.search-box{display:block}}
 
+/* ---------- 4b. Hamburger (mobile) ---------- */
+.hamburger-btn{display:none;width:36px;height:36px;align-items:center;justify-content:center;border-radius:var(--radius-sm);color:var(--text-0);flex:none}
+.hamburger-btn .bars{position:relative;width:18px;height:13px}
+.hamburger-btn .bars span{position:absolute;left:0;width:100%;height:2px;background:currentColor;border-radius:2px;transition:transform .22s var(--ease),opacity .22s var(--ease),top .22s var(--ease)}
+.hamburger-btn .bars span:nth-child(1){top:0}
+.hamburger-btn .bars span:nth-child(2){top:5.5px}
+.hamburger-btn .bars span:nth-child(3){top:11px}
+.hamburger-btn.open .bars span:nth-child(1){top:5.5px;transform:rotate(45deg)}
+.hamburger-btn.open .bars span:nth-child(2){opacity:0}
+.hamburger-btn.open .bars span:nth-child(3){top:5.5px;transform:rotate(-45deg)}
+
+@media (max-width:860px){
+  .hamburger-btn{display:flex}
+  .main-nav{
+    position:fixed; top:var(--header-h); left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:var(--bg-1); border-bottom:1px solid var(--line);
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height .25s var(--ease), opacity .2s var(--ease);
+    z-index:49; box-shadow:var(--shadow-md);
+  }
+  .main-nav.open{ max-height:70vh; opacity:1; overflow-y:auto; }
+  .nav-link{ padding:14px var(--sp-5); font-size:.8rem; border-bottom:1px solid var(--line-soft); border-radius:0; }
+  .nav-link.active{ background:var(--gold-bg); color:var(--gold); }
+  .search-box{display:block;position:fixed;width:auto}
+}
+
 /* ---------- 5. Botões e chips ---------- */
 .btn{
   display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);
@@ -199,7 +226,7 @@ ul{list-style:none}
 .tab-row{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin-bottom:var(--sp-4);overflow-x:auto}
 .tab-btn{padding:var(--sp-2) var(--sp-4);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
 .tab-btn.active{color:var(--gold);border-color:var(--gold)}
-.filter-row{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-5)}
+.filter-row{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-5);align-items:flex-end}
 .select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;font-size:.78rem;color:var(--text-0)}
 
 /* ---------- 10. Standings table ---------- */
@@ -249,7 +276,7 @@ ul{list-style:none}
 /* ---------- 12. Predição IA ---------- */
 .predict-card{background:var(--bg-1);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:var(--sp-5);position:relative;overflow:hidden}
 .predict-card::before{content:"IA";position:absolute;top:-6px;right:10px;font-family:var(--font-display);font-size:4.5rem;font-weight:900;color:var(--gold-bg);line-height:1;user-select:none}
-.predict-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)}
+.predict-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:var(--sp-2)}
 .confidence{display:flex;align-items:center;gap:8px}
 .confidence b{font-family:var(--font-mono);color:var(--gold);font-size:1.1rem}
 .prob-bars{display:flex;flex-direction:column;gap:var(--sp-3);margin-bottom:var(--sp-4)}
@@ -269,6 +296,11 @@ ul{list-style:none}
 .factor .f-val{font-family:var(--font-mono);font-weight:700}
 .factor .f-val.pos{color:var(--live)}
 .factor .f-val.neg{color:var(--red)}
+.score-grid-wrap{overflow-x:auto;margin-top:var(--sp-2)}
+.score-grid{border-collapse:collapse;font-size:.68rem}
+.score-grid td,.score-grid th{padding:4px 6px;text-align:center;font-family:var(--font-mono)}
+.score-grid th{color:var(--text-2);font-weight:700}
+.score-grid td{border:1px solid var(--line-soft);min-width:30px}
 
 /* ---------- 13. Bracket (mata-mata) ---------- */
 .bracket{display:flex;gap:var(--sp-6);overflow-x:auto;padding-bottom:var(--sp-4)}
@@ -345,6 +377,33 @@ ul{list-style:none}
 .reveal-stagger > *:nth-child(3){animation-delay:.08s} .reveal-stagger > *:nth-child(4){animation-delay:.11s}
 .reveal-stagger > *:nth-child(5){animation-delay:.14s} .reveal-stagger > *:nth-child(6){animation-delay:.17s}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+
+/* ---------- 21. Novos componentes (palpites / favoritos / estatísticas / previsão) ---------- */
+.comp-tab-row{display:flex;gap:var(--sp-1);flex-wrap:wrap;margin-bottom:var(--sp-4)}
+.comp-tab{padding:7px 13px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--bg-2);color:var(--text-1);border:1px solid var(--line)}
+.comp-tab.active{background:var(--gold);color:#1a1306;border-color:var(--gold)}
+.comp-tab .count{opacity:.7;margin-left:4px}
+.search-results{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;max-height:340px;overflow-y:auto}
+.search-result-row{background:var(--bg-1);display:flex;align-items:center;gap:var(--sp-3);padding:9px 12px}
+.search-result-row .name{flex:1;font-size:.85rem;font-weight:600}
+.add-fav-btn{padding:5px 11px;font-size:.66rem}
+.add-fav-btn.added{background:var(--live-bg);color:var(--live);border-color:var(--live)}
+.quick-guess-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4)}
+.vs-row{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:.9rem;margin-bottom:var(--sp-3)}
+.vs-row .vs{color:var(--text-2);font-weight:400;font-size:.7rem;text-transform:uppercase}
+.analysis-toolbar{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--sp-5);padding:var(--sp-4);background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg)}
+.analysis-toolbar .field{margin:0;min-width:140px}
+.kpi-delta{font-size:.7rem;font-weight:700}
+.kpi-delta.pos{color:var(--live)} .kpi-delta.neg{color:var(--red)}
+.h2h-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:.8rem}
+.player-row{display:flex;align-items:center;gap:var(--sp-3);padding:9px 4px;border-bottom:1px solid var(--line-soft);font-size:.82rem}
+.player-row .rank{width:22px;font-family:var(--font-mono);color:var(--text-2);text-align:center}
+.player-row .pname{flex:1;font-weight:600}
+.player-row .pgoals{font-family:var(--font-mono);font-weight:700;color:var(--gold)}
+.match-picker{display:flex;flex-direction:column;gap:var(--sp-2);max-height:280px;overflow-y:auto;margin-top:var(--sp-3)}
+.match-pick-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:9px 12px;background:var(--bg-2);border-radius:var(--radius-sm);font-size:.8rem}
+.match-pick-row:hover{background:var(--bg-3);cursor:pointer}
+.match-pick-row.selected{border:1px solid var(--gold);background:var(--gold-bg)}
 </style>
 </head>
 <body>
@@ -353,6 +412,9 @@ ul{list-style:none}
   <!-- ===================== HEADER ===================== -->
   <header class="site-header">
     <div class="container">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menu" aria-expanded="false">
+        <span class="bars"><span></span><span></span><span></span></span>
+      </button>
       <a href="#/" class="brand"><span class="dot"></span>WORLD<b>CUP</b>·AI</a>
       <nav class="main-nav" id="mainNav">
         <a class="nav-link" href="#/" data-route="/">Início</a>
@@ -360,6 +422,7 @@ ul{list-style:none}
         <a class="nav-link" href="#/classificacao" data-route="/classificacao">Classificação</a>
         <a class="nav-link" href="#/mata-mata" data-route="/mata-mata">Mata-mata</a>
         <a class="nav-link" href="#/estatisticas" data-route="/estatisticas">Estatísticas</a>
+        <a class="nav-link" href="#/previsao" data-route="/previsao">Previsão IA</a>
         <a class="nav-link" href="#/palpites" data-route="/palpites">Meus Palpites</a>
         <a class="nav-link" href="#/favoritos" data-route="/favoritos">Favoritos</a>
       </nav>
@@ -418,6 +481,13 @@ ul{list-style:none}
       <button class="modal-close" id="settingsCloseBtn" aria-label="Fechar">✕</button>
     </div>
     <div class="modal-body">
+      <div class="field">
+        <label for="userNameInput">Seu nome</label>
+        <input id="userNameInput" type="text" placeholder="Como podemos te chamar?">
+      </div>
+      <p style="font-size:.78rem;color:var(--text-2);margin:6px 0 var(--sp-4)">
+        O site vai te chamar pelo nome no painel e nas notificações. Fica salvo só no seu navegador.
+      </p>
       <div class="field">
         <label for="apiKeyInput">Chave da API (football-data.org)</label>
         <input id="apiKeyInput" type="text" placeholder="Cole sua chave gratuita aqui">
@@ -483,6 +553,11 @@ const Utils = (function(){
     return d.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
   }
   function fmtDateTime(iso){ return fmtDate(iso) + " · " + fmtTime(iso); }
+  function fmtISODate(d){
+    // yyyy-mm-dd para inputs type=date
+    const dt = (d instanceof Date) ? d : new Date(d);
+    return dt.toISOString().slice(0,10);
+  }
   function timeAgo(iso){
     const diff = Date.now() - new Date(iso).getTime();
     const min = Math.floor(diff/60000);
@@ -526,7 +601,8 @@ const Utils = (function(){
   }
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
   function uid(){ return Math.random().toString(36).slice(2,10); }
-  return { $, $all, el, fmtDate, fmtTime, fmtDateTime, timeAgo, initials, crestImg, statusLabel, stageLabel, debounce, clamp, uid };
+  function normalize(s){ return (s||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+  return { $, $all, el, fmtDate, fmtTime, fmtDateTime, fmtISODate, timeAgo, initials, crestImg, statusLabel, stageLabel, debounce, clamp, uid, normalize };
 })();
 
 /* ----------------------------------------------------------------
@@ -564,6 +640,7 @@ const Api = (function(){
   // que queira usar a própria chave — útil se muita gente acessar ao mesmo tempo,
   // já que o limite de requisições por minuto é compartilhado entre quem usa essa chave.
   const DEFAULT_API_KEY = "8784fc6c802e4116b6229330f88405da";
+  const COMPETITIONS = ["WC","CL","EC","PL","BL1","SA","PD","BSA"];
   let queue = [];
   let processing = false;
   const FALLBACK_GAP = 6200; // só usado antes de recebermos o 1º header real da API
@@ -677,7 +754,7 @@ const Api = (function(){
     teamMatches: (id, params) => get(`/teams/${id}/matches${params||""}`, 300000),
     scorers: (comp) => get(`/competitions/${comp}/scorers?limit=25`, 300000),
     competition: (comp) => get(`/competitions/${comp}`, 600000),
-    invalidate, getKey, getComp,
+    invalidate, getKey, getComp, COMPETITIONS,
   };
 })();
 
@@ -699,6 +776,19 @@ const Theme = (function(){
 })();
 
 /* ----------------------------------------------------------------
+   4b. PROFILE — nome do usuário, usado para personalizar o painel
+   ---------------------------------------------------------------- */
+const Profile = (function(){
+  function getName(){ return (Store.get("userName","")||"").trim(); }
+  function setName(n){ Store.set("userName", (n||"").trim()); }
+  function greeting(){
+    const n = getName();
+    return n ? (", "+n) : "";
+  }
+  return { getName, setName, greeting };
+})();
+
+/* ----------------------------------------------------------------
    5. TOAST — avisos in-app (espelha notificações nativas)
    ---------------------------------------------------------------- */
 const Toast = (function(){
@@ -716,23 +806,51 @@ const Toast = (function(){
 })();
 
 /* ----------------------------------------------------------------
-   6. FAVORITES — times, jogadores e jogos favoritos
+   6. FAVORITES — times (por competição) e jogos favoritos
    ---------------------------------------------------------------- */
 const Favorites = (function(){
-  function getAll(){ return Store.get("favorites", { teams:[], matches:[] }); }
-  function isFavTeam(id){ return getAll().teams.includes(id); }
+  const DEFAULT_SHAPE = { teamsByComp:{}, matches:[] };
+
+  function migrate(raw){
+    // formato antigo: { teams:[ids...], matches:[ids...] } sem separação por competição.
+    // migramos para teamsByComp usando a competição configurada no momento, sem perder dados.
+    if(raw && Array.isArray(raw.teams) && !raw.teamsByComp){
+      const comp = Api.getComp();
+      const shaped = { teamsByComp: { [comp]: raw.teams.slice() }, matches: raw.matches||[] };
+      Store.set("favorites", shaped);
+      return shaped;
+    }
+    if(!raw) return JSON.parse(JSON.stringify(DEFAULT_SHAPE));
+    if(!raw.teamsByComp) raw.teamsByComp = {};
+    if(!raw.matches) raw.matches = [];
+    return raw;
+  }
+  function getAll(){ return migrate(Store.get("favorites", null)); }
+  function getTeamsForComp(comp){ return getAll().teamsByComp[comp] || []; }
+  function getAllTeamsFlat(){
+    // [{id, comp}] — usado pra notificações que não dependem da competição ativa
+    const f = getAll(); const out = [];
+    Object.keys(f.teamsByComp).forEach(comp => f.teamsByComp[comp].forEach(id => out.push({ id, comp })));
+    return out;
+  }
+  function isFavTeam(id, comp){ comp = comp || Api.getComp(); return getTeamsForComp(comp).includes(id); }
   function isFavMatch(id){ return getAll().matches.includes(id); }
-  function toggleTeam(id){
-    const f = getAll(); const i = f.teams.indexOf(id);
-    if(i>=0) f.teams.splice(i,1); else f.teams.push(id);
-    Store.set("favorites", f); return f.teams.includes(id);
+  function toggleTeam(id, comp){
+    comp = comp || Api.getComp();
+    const f = getAll();
+    if(!f.teamsByComp[comp]) f.teamsByComp[comp] = [];
+    const i = f.teamsByComp[comp].indexOf(id);
+    if(i>=0) f.teamsByComp[comp].splice(i,1); else f.teamsByComp[comp].push(id);
+    Store.set("favorites", f);
+    return f.teamsByComp[comp].includes(id);
   }
   function toggleMatch(id){
     const f = getAll(); const i = f.matches.indexOf(id);
     if(i>=0) f.matches.splice(i,1); else f.matches.push(id);
     Store.set("favorites", f); return f.matches.includes(id);
   }
-  return { getAll, isFavTeam, isFavMatch, toggleTeam, toggleMatch };
+  function countForComp(comp){ return getTeamsForComp(comp).length; }
+  return { getAll, getTeamsForComp, getAllTeamsFlat, isFavTeam, isFavMatch, toggleTeam, toggleMatch, countForComp };
 })();
 
 /* ----------------------------------------------------------------
@@ -741,8 +859,9 @@ const Favorites = (function(){
 const Guesses = (function(){
   function all(){ return Store.get("guesses", {}); }
   function save(matchId, guess){
-    const g = all(); g[matchId] = Object.assign({}, guess, { savedAt: Date.now(), checked:false });
+    const g = all(); g[matchId] = Object.assign({}, g[matchId], guess, { savedAt: Date.now(), checked:false });
     Store.set("guesses", g);
+    return g[matchId];
   }
   function get(matchId){ return all()[matchId] || null; }
   function remove(matchId){ const g = all(); delete g[matchId]; Store.set("guesses", g); }
@@ -758,7 +877,6 @@ const Guesses = (function(){
     const realResult = realHome > realAway ? "HOME" : (realHome < realAway ? "AWAY" : "DRAW");
     const guessResult = Number(g.home) > Number(g.away) ? "HOME" : (Number(g.home) < Number(g.away) ? "AWAY" : "DRAW");
     hits.vencedor = realResult === guessResult;
-    const totalGoals = realHome + realAway;
     if(g.corners !== undefined && g.corners !== "") hits.escanteios = null; // API free não fornece escanteios reais — marcado como não verificável
     let score = 0, possible = 1;
     if(hits.placarExato) score += 2; possible += 1; // placar vale mais
@@ -795,6 +913,9 @@ const Notify = (function(){
   let permissionAsked = false;
   let pollTimer = null;
   let knownState = Store.get("matchStates", {}); // matchId -> { status, homeScore, awayScore }
+  let onUpdateCallbacks = [];
+
+  function onUpdate(fn){ onUpdateCallbacks.push(fn); }
 
   function updateBtn(){
     const btn = document.getElementById("notifyBtn");
@@ -823,7 +944,8 @@ const Notify = (function(){
   }
 
   function diffAndNotify(matches){
-    const favs = Favorites.getAll().teams;
+    const favs = Favorites.getTeamsForComp(Api.getComp());
+    let changed = false;
     matches.forEach(m => {
       const prev = knownState[m.id];
       const curHome = m.score.fullTime.home, curAway = m.score.fullTime.away;
@@ -832,6 +954,7 @@ const Notify = (function(){
         knownState[m.id] = { status:m.status, home:curHome, away:curAway };
         return;
       }
+      if(prev.status !== m.status || prev.home !== curHome || prev.away !== curAway) changed = true;
       if(prev.status !== "IN_PLAY" && m.status === "IN_PLAY"){
         fire("⚽ Começou!", `${m.homeTeam.shortName||m.homeTeam.name} x ${m.awayTeam.shortName||m.awayTeam.name}`, { live:true });
         if(involvesFav) fire("⭐ Seu time entrou em campo", `${m.homeTeam.shortName} x ${m.awayTeam.shortName}`, { live:true });
@@ -851,6 +974,7 @@ const Notify = (function(){
       knownState[m.id] = { status:m.status, home:curHome, away:curAway };
     });
     Store.set("matchStates", knownState);
+    if(changed) onUpdateCallbacks.forEach(fn => { try{ fn(matches); }catch(e){} });
   }
 
   function startPolling(getMatchesFn){
@@ -858,11 +982,11 @@ const Notify = (function(){
     pollTimer = setInterval(async () => {
       if(document.hidden) return;
       try{ const ms = await getMatchesFn(); diffAndNotify(ms); }catch(e){}
-    }, 60000);
+    }, 30000);
   }
   function stopPolling(){ if(pollTimer) clearInterval(pollTimer); }
 
-  return { requestPermission, updateBtn, diffAndNotify, startPolling, stopPolling };
+  return { requestPermission, updateBtn, diffAndNotify, startPolling, stopPolling, onUpdate };
 })();
 
 /* ----------------------------------------------------------------
@@ -959,7 +1083,8 @@ const Predict = (function(){
     return {
       pHome, pDraw, pAway, pBTTS, pOver25, pUnder25: 1-pOver25,
       expHome: lambdaHome, expAway: lambdaAway,
-      bestScore: best, confidence: Math.round(confidence), factors,
+      bestScore: best, confidence: Math.round(confidence), factors, grid,
+      homeForm, awayForm,
     };
   }
 
@@ -1020,6 +1145,35 @@ const Charts = (function(){
       ctx.fillText(labels[i], x+bw*0.32, h-8);
       ctx.fillStyle = colorVar("--text-0"); ctx.font = "700 10px var(--font-mono)";
       ctx.fillText(String(v), x+bw*0.32, y-5);
+    });
+  }
+
+  function groupedBarChart(canvas, labels, seriesA, seriesB, opts){
+    opts = opts || {};
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    const pad = { l:34, r:10, t:14, b:26 };
+    const max = Math.max(1, ...seriesA.data, ...seriesB.data) * 1.15;
+    const bw = (w - pad.l - pad.r) / labels.length;
+    ctx.strokeStyle = colorVar("--line");
+    for(let i=0;i<=4;i++){
+      const y = pad.t + (h-pad.t-pad.b)*(i/4);
+      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+      ctx.fillStyle = colorVar("--text-2"); ctx.font="10px var(--font-mono)"; ctx.textAlign="right";
+      ctx.fillText(Math.round(max*(1-i/4)), pad.l-6, y+3);
+    }
+    labels.forEach((l,i) => {
+      const gx = pad.l + i*bw;
+      const subw = bw*0.36;
+      [[seriesA.data[i], seriesA.color || colorVar("--gold"), 0.12], [seriesB.data[i], seriesB.color || colorVar("--blue"), 0.62]].forEach(([v,color,off]) => {
+        const bh = (h-pad.t-pad.b)*(v/max);
+        const x = gx + bw*off;
+        const y = h - pad.b - bh;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, subw, bh);
+      });
+      ctx.fillStyle = colorVar("--text-1"); ctx.font="10px var(--font-body)"; ctx.textAlign="center";
+      ctx.fillText(l, gx+bw/2, h-8);
     });
   }
 
@@ -1114,7 +1268,7 @@ const Charts = (function(){
     });
   }
 
-  return { barChart, lineChart, donutChart, radarChart };
+  return { barChart, groupedBarChart, lineChart, donutChart, radarChart };
 })();
 
 /* ----------------------------------------------------------------
@@ -1122,12 +1276,23 @@ const Charts = (function(){
    ---------------------------------------------------------------- */
 const Router = (function(){
   const routes = {};
+  let currentPath = "/";
   function on(path, handler){ routes[path] = handler; }
+  function current(){ return currentPath; }
   function resolve(){
     const hash = location.hash.replace(/^#/, "") || "/";
     const [pathPart] = hash.split("?");
     const segs = pathPart.split("/").filter(Boolean);
+    currentPath = "/" + (segs[0]||"");
     Utils.$all(".nav-link").forEach(a => a.classList.toggle("active", a.dataset.route === "/"+ (segs[0]||"")));
+
+    // fecha o menu mobile sempre que a rota muda
+    const nav = document.getElementById("mainNav");
+    const hb = document.getElementById("hamburgerBtn");
+    if(nav && nav.classList.contains("open")){
+      nav.classList.remove("open");
+      if(hb){ hb.classList.remove("open"); hb.setAttribute("aria-expanded","false"); }
+    }
 
     if(segs.length === 0) return routes["/"]();
     if(segs[0] === "jogos" && !segs[1]) return routes["/jogos"]();
@@ -1135,6 +1300,7 @@ const Router = (function(){
     if(segs[0] === "classificacao") return routes["/classificacao"]();
     if(segs[0] === "mata-mata") return routes["/mata-mata"]();
     if(segs[0] === "estatisticas") return routes["/estatisticas"]();
+    if(segs[0] === "previsao") return routes["/previsao"]();
     if(segs[0] === "palpites") return routes["/palpites"]();
     if(segs[0] === "favoritos") return routes["/favoritos"]();
     if(segs[0] === "time" && segs[1]) return routes["/time"](segs[1]);
@@ -1145,7 +1311,7 @@ const Router = (function(){
     window.addEventListener("hashchange", resolve);
     resolve();
   }
-  return { on, init, resolve };
+  return { on, init, resolve, current };
 })();
 
 /* ----------------------------------------------------------------
@@ -1239,14 +1405,16 @@ const Views = (function(){
   }
 
   /* ---------- HOME ---------- */
+  let homeAutoTimer = null;
   async function renderHome(){
+    if(homeAutoTimer){ clearInterval(homeAutoTimer); homeAutoTimer = null; }
     const comp = Api.getComp();
     main().innerHTML = "";
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
 
     main().appendChild(Utils.el("div", { class:"view-head" }, [
       Utils.el("div", {}, [
-        Utils.el("h1", { class:"view-title" }, ["Painel da Copa"]),
+        Utils.el("h1", { class:"view-title" }, ["Painel da Copa" + Profile.greeting()]),
         Utils.el("p", { class:"view-sub" }, ["Acompanhamento ao vivo · "+comp]),
       ]),
     ]));
@@ -1262,38 +1430,62 @@ const Views = (function(){
     main().append(liveSec.wrap, nextSec.wrap, lastSec.wrap, favSec.wrap);
     [liveSec, nextSec, lastSec, favSec].forEach(s => s.body.appendChild(loadingBlock(3)));
 
-    try{
-      const data = await Api.matches(comp, "");
-      const matches = data.matches || [];
-      Notify.diffAndNotify(matches);
+    async function paint(invalidateFirst){
+      try{
+        if(invalidateFirst) Api.invalidate("/competitions/"+comp+"/matches");
+        const data = await Api.matches(comp, "");
+        const matches = data.matches || [];
+        Notify.diffAndNotify(matches);
 
-      const now = Date.now();
-      const live = matches.filter(m => m.status==="IN_PLAY"||m.status==="PAUSED");
-      const upcoming = matches.filter(m => (m.status==="SCHEDULED"||m.status==="TIMED") && new Date(m.utcDate).getTime() > now)
-                               .sort((a,b)=> new Date(a.utcDate)-new Date(b.utcDate)).slice(0,6);
-      const finished = matches.filter(m => m.status==="FINISHED").sort((a,b)=> new Date(b.utcDate)-new Date(a.utcDate)).slice(0,6);
-      const favIds = Favorites.getAll().teams;
-      const favMatches = matches.filter(m => favIds.includes(m.homeTeam.id) || favIds.includes(m.awayTeam.id)).slice(0,6);
+        const now = Date.now();
+        // "ao vivo" = status IN_PLAY/PAUSED OU jogos cujo horário de início já passou
+        // mas a API ainda não atualizou o status (evita sumiço do jogo do dia).
+        const live = matches.filter(m => m.status==="IN_PLAY"||m.status==="PAUSED");
+        const justKickedOff = matches.filter(m => (m.status==="SCHEDULED"||m.status==="TIMED")
+          && new Date(m.utcDate).getTime() <= now
+          && new Date(m.utcDate).getTime() > now - (3*60*60*1000)); // até 3h após o horário previsto
+        const liveCombined = [...live, ...justKickedOff];
 
-      // hero strip
-      heroWrap.innerHTML = "";
-      heroWrap.append(
-        heroCell("Jogos ao vivo", String(live.length), live.length?"live":""),
-        heroCell("Próximo jogo", upcoming[0] ? Utils.fmtDateTime(upcoming[0].utcDate) : "—"),
-        heroCellCountdown(upcoming[0]),
-        heroCell("Jogos finalizados", String(finished.length)),
-        heroCell("Total de partidas", String(matches.length))
-      );
+        const upcoming = matches.filter(m => (m.status==="SCHEDULED"||m.status==="TIMED") && new Date(m.utcDate).getTime() > now)
+                                 .sort((a,b)=> new Date(a.utcDate)-new Date(b.utcDate)).slice(0,6);
+        const finished = matches.filter(m => m.status==="FINISHED").sort((a,b)=> new Date(b.utcDate)-new Date(a.utcDate)).slice(0,6);
+        const favIds = Favorites.getTeamsForComp(comp);
+        const favMatches = matches.filter(m => favIds.includes(m.homeTeam.id) || favIds.includes(m.awayTeam.id)).slice(0,6);
 
-      fillSection(liveSec, live, "Nenhum jogo ao vivo agora.");
-      fillSection(nextSec, upcoming, "Nenhum jogo agendado encontrado.");
-      fillSection(lastSec, finished, "Ainda não há resultados.");
-      fillSection(favSec, favMatches, "Favorite times para vê-los aqui.");
+        // próximo jogo "inteligente": se já tem jogo rolando/começando, o próximo da contagem
+        // é o primeiro realmente agendado; senão é o mais próximo no tempo.
+        const nextForCountdown = upcoming[0];
 
-    }catch(err){
-      heroWrap.innerHTML = ""; heroWrap.style.display="none";
-      [liveSec, nextSec, lastSec, favSec].forEach(s => { s.body.innerHTML=""; s.body.appendChild(errorState(err, renderHome)); });
+        // hero strip
+        heroWrap.innerHTML = "";
+        heroWrap.append(
+          heroCell("Jogos ao vivo", String(liveCombined.length), liveCombined.length?"live":""),
+          heroCell("Próximo jogo", nextForCountdown ? Utils.fmtDateTime(nextForCountdown.utcDate) : "—"),
+          heroCellCountdown(nextForCountdown),
+          heroCell("Jogos finalizados", String(finished.length)),
+          heroCell("Total de partidas", String(matches.length))
+        );
+
+        fillSection(liveSec, liveCombined, "Nenhum jogo ao vivo agora.");
+        fillSection(nextSec, upcoming, "Nenhum jogo agendado encontrado.");
+        fillSection(lastSec, finished, "Ainda não há resultados.");
+        fillSection(favSec, favMatches, favIds.length ? "Nenhum jogo dos seus favoritos nesta competição." : "Favorite times em Favoritos para vê-los aqui.");
+
+        return liveCombined.length > 0;
+      }catch(err){
+        heroWrap.innerHTML = ""; heroWrap.style.display="none";
+        [liveSec, nextSec, lastSec, favSec].forEach(s => { s.body.innerHTML=""; s.body.appendChild(errorState(err, renderHome)); });
+        return false;
+      }
     }
+
+    const hasLive = await paint(false);
+    // enquanto a Home estiver aberta, atualiza sozinha a cada 30s (mais rápido se há jogo ao vivo)
+    homeAutoTimer = setInterval(() => {
+      if(Router.current() !== "/") { clearInterval(homeAutoTimer); homeAutoTimer = null; return; }
+      if(document.hidden) return;
+      paint(true);
+    }, hasLive ? 20000 : 45000);
   }
 
   function heroCell(label, value, cls){
@@ -1455,8 +1647,6 @@ const Views = (function(){
 
     // cartões/gols/substituições — quando disponíveis no plano da API
     const cards = (m.bookings||[]);
-    const goals = (m.goals||[]);
-    const subs = (m.substitutions||[]);
     if(cards.length){
       wrap.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:20px"},["Cartões"]));
       const list = Utils.el("div",{class:"timeline"});
@@ -1502,14 +1692,14 @@ const Views = (function(){
       const ctx = { matches: [...(homeMatchesRes.matches||[]), ...(awayMatchesRes.matches||[])], standings };
       const pred = Predict.predictMatch(m.homeTeam, m.awayTeam, ctx);
       panel.innerHTML = "";
-      panel.appendChild(predictionCard(m, pred));
+      panel.appendChild(predictionCard(m.homeTeam, m.awayTeam, pred));
     }catch(err){
       panel.innerHTML = "";
       panel.appendChild(errorState(err));
     }
   }
 
-  function predictionCard(m, p){
+  function predictionCard(homeTeam, awayTeam, p){
     const card = Utils.el("div", { class:"predict-card fade-in" });
     card.appendChild(Utils.el("div", { class:"predict-head" }, [
       Utils.el("div", { style:"font-weight:700" }, ["Previsão da IA"]),
@@ -1517,9 +1707,9 @@ const Views = (function(){
     ]));
     const bars = Utils.el("div", { class:"prob-bars" });
     [
-      ["home", m.homeTeam.shortName||m.homeTeam.name, p.pHome],
+      ["home", homeTeam.shortName||homeTeam.name, p.pHome],
       ["draw", "Empate", p.pDraw],
-      ["away", m.awayTeam.shortName||m.awayTeam.name, p.pAway],
+      ["away", awayTeam.shortName||awayTeam.name, p.pAway],
     ].forEach(([cls,label,val]) => {
       const pct = Math.round(val*100);
       const row = Utils.el("div",{class:"prob-row"},[
@@ -1541,14 +1731,31 @@ const Views = (function(){
     ]);
     card.appendChild(grid);
 
-    card.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:4px"},["Fatores considerados"]));
+    // matriz de placares mais prováveis (top 6)
+    const flatScores = [];
+    for(let h=0;h<p.grid.length;h++) for(let a=0;a<p.grid[h].length;a++) flatScores.push({h,a,p:p.grid[h][a]});
+    flatScores.sort((a,b)=>b.p-a.p);
+    card.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:4px"},["Placares mais prováveis"]));
+    const scoresWrap = Utils.el("div",{class:"score-grid-wrap"});
+    const scoresTable = Utils.el("table",{class:"score-grid"});
+    const trh = Utils.el("tr",{},[Utils.el("th",{},["Placar"]),Utils.el("th",{},["Prob."])]);
+    scoresTable.appendChild(Utils.el("thead",{},[trh]));
+    const tbody = Utils.el("tbody");
+    flatScores.slice(0,6).forEach(s => tbody.appendChild(Utils.el("tr",{},[
+      Utils.el("td",{},[s.h+" – "+s.a]), Utils.el("td",{},[(s.p*100).toFixed(1)+"%"])
+    ])));
+    scoresTable.appendChild(tbody);
+    scoresWrap.appendChild(scoresTable);
+    card.appendChild(scoresWrap);
+
+    card.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:16px"},["Fatores considerados"]));
     const factors = Utils.el("div", { class:"factors" });
     p.factors.forEach(f => factors.appendChild(Utils.el("div",{class:"factor"},[
       Utils.el("span",{class:"f-name"},[f.name]),
       Utils.el("span",{class:"f-val "+(f.positive?"pos":"neg")},[f.val]),
     ])));
     card.appendChild(factors);
-    card.appendChild(Utils.el("p",{style:"font-size:.7rem;color:var(--text-2);margin-top:12px"},["Estimativa estatística (distribuição de Poisson ponderada por forma recente e mando de campo). Não é garantia de resultado — é só pra divertir o palpite."]));
+    card.appendChild(Utils.el("p",{style:"font-size:.7rem;color:var(--text-2);margin-top:12px"},["Estimativa estatística (distribuição de Poisson ponderada por forma recente, médias de gols e mando de campo, com ajuste pela posição na tabela quando disponível). Não é garantia de resultado — é só pra divertir o palpite."]));
     return card;
   }
   function statBox(label, val){ return Utils.el("div",{class:"predict-stat"},[Utils.el("b",{},[val]), Utils.el("span",{},[label])]); }
@@ -1575,6 +1782,15 @@ const Views = (function(){
       return wrap;
     }
 
+    wrap.appendChild(buildGuessForm(m, existing, () => {
+      wrap.innerHTML = ""; wrap.appendChild(guessPanel(m));
+    }));
+    return wrap;
+  }
+
+  // formulário reaproveitável de palpite (usado no modal e na página /palpites)
+  function buildGuessForm(m, existing, onSaved){
+    const wrap = Utils.el("div", {});
     wrap.appendChild(Utils.el("p",{style:"font-size:.8rem;color:var(--text-1)"},["Registre seu palpite antes do apito inicial. Tudo fica salvo só no seu navegador — sem dinheiro, é só pra fixar e ver depois se acertou 😉"]));
     const form = Utils.el("div", { class:"guess-form" });
     const homeInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.home:"0"});
@@ -1598,12 +1814,20 @@ const Views = (function(){
       Guesses.save(m.id, {
         home: homeInput.value||0, away: awayInput.value||0, firstGoal: firstGoal.value,
         cards: cardsInput.value, corners: cornersInput.value, motm: motmInput.value,
+        comp: Api.getComp(),
         teams: { home: m.homeTeam.shortName||m.homeTeam.name, away: m.awayTeam.shortName||m.awayTeam.name },
+        utcDate: m.utcDate,
       });
-      Toast.show("Palpite salvo!", "Vamos conferir assim que o jogo terminar.");
-      wrap.innerHTML = ""; wrap.appendChild(guessPanel(m));
+      const name = Profile.getName();
+      Toast.show("Palpite salvo!" + (name ? " Boa, "+name+"!" : ""), "Vamos conferir assim que o jogo terminar.");
+      if(onSaved) onSaved();
     };
     wrap.appendChild(saveBtn);
+    if(existing){
+      const delBtn = Utils.el("button",{class:"btn btn-sm",style:"margin-top:14px;margin-left:8px"},["Remover palpite"]);
+      delBtn.onclick = () => { Guesses.remove(m.id); Toast.show("Palpite removido", ""); if(onSaved) onSaved(); };
+      wrap.appendChild(delBtn);
+    }
     return wrap;
   }
   function field(label, input){ return Utils.el("div",{class:"field"},[Utils.el("label",{},[label]), input]); }
@@ -1704,28 +1928,88 @@ const Views = (function(){
     return bm;
   }
 
-  /* ---------- ESTATÍSTICAS ---------- */
+  /* ---------- ESTATÍSTICAS (análise profunda com filtros) ---------- */
   async function renderStats(){
     const comp = Api.getComp();
     main().innerHTML = "";
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
     main().appendChild(Utils.el("div", { class:"view-head" }, [
-      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Estatísticas"]), Utils.el("p",{class:"view-sub"},["Visão geral do torneio"]) ]),
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Estatísticas"]), Utils.el("p",{class:"view-sub"},["Análise profunda — visão geral, times, comparativos, jogos e artilharia"]) ]),
     ]));
-    const body = Utils.el("div"); main().appendChild(body); body.appendChild(loadingBlock(2));
-    try{
-      const data = await Api.matches(comp, "");
-      const finished = (data.matches||[]).filter(m=>m.status==="FINISHED");
-      body.innerHTML = "";
-      if(!finished.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Ainda não há jogos finalizados para gerar estatísticas."])); return; }
 
-      // gols por rodada/matchday
+    const tabRow = Utils.el("div", { class:"tab-row" });
+    const tabKeys = [["geral","Visão geral"],["time","Por time"],["comparar","Comparar times"],["jogo","Por jogo"],["artilheiros","Artilheiros"]];
+    const tabBtns = {};
+    tabKeys.forEach(([k,label],i) => {
+      const b = Utils.el("button",{class:"tab-btn"+(i===0?" active":"")},[label]);
+      b.onclick = () => { Object.values(tabBtns).forEach(x=>x.classList.remove("active")); b.classList.add("active"); switchPanel(k); };
+      tabBtns[k]=b; tabRow.appendChild(b);
+    });
+    main().appendChild(tabRow);
+
+    const panelHost = Utils.el("div");
+    main().appendChild(panelHost);
+    panelHost.appendChild(loadingBlock(2));
+
+    let allMatches = [], teams = [];
+    try{
+      const [matchesData, teamsData] = await Promise.all([ Api.matches(comp, ""), Api.teams(comp).catch(()=>({teams:[]})) ]);
+      allMatches = matchesData.matches || [];
+      teams = teamsData.teams || [];
+    }catch(err){ panelHost.innerHTML=""; panelHost.appendChild(errorState(err, renderStats)); return; }
+
+    function switchPanel(key){
+      panelHost.innerHTML = "";
+      if(key==="geral") panelHost.appendChild(statsGeralPanel(allMatches));
+      else if(key==="time") panelHost.appendChild(statsTimePanel(allMatches, teams));
+      else if(key==="comparar") panelHost.appendChild(statsCompararPanel(allMatches, teams));
+      else if(key==="jogo") panelHost.appendChild(statsJogoPanel(allMatches));
+      else if(key==="artilheiros") statsArtilheirosPanel(panelHost, comp);
+    }
+    switchPanel("geral");
+  }
+
+  // -------- toolbar de período reutilizável: retorna {wrap, getRange()} --------
+  function periodToolbar(matches, onChange){
+    const dates = matches.map(m=>new Date(m.utcDate).getTime()).filter(Boolean);
+    const minD = dates.length ? Utils.fmtISODate(Math.min(...dates)) : "";
+    const maxD = dates.length ? Utils.fmtISODate(Math.max(...dates)) : "";
+    const wrap = Utils.el("div", { class:"analysis-toolbar" });
+    const fromInput = Utils.el("input",{type:"date",value:minD});
+    const toInput = Utils.el("input",{type:"date",value:maxD});
+    wrap.append(
+      field("De", fromInput),
+      field("Até", toInput),
+    );
+    const apply = Utils.el("button",{class:"btn btn-sm"},["Aplicar período"]);
+    apply.onclick = () => onChange(fromInput.value, toInput.value);
+    const clear = Utils.el("button",{class:"btn btn-sm btn-ghost"},["Limpar"]);
+    clear.onclick = () => { fromInput.value = minD; toInput.value = maxD; onChange(minD,maxD); };
+    wrap.append(apply, clear);
+    return wrap;
+  }
+  function filterByPeriod(matches, from, to){
+    if(!from && !to) return matches;
+    const fT = from ? new Date(from+"T00:00:00").getTime() : -Infinity;
+    const tT = to ? new Date(to+"T23:59:59").getTime() : Infinity;
+    return matches.filter(m => { const t = new Date(m.utcDate).getTime(); return t>=fT && t<=tT; });
+  }
+
+  function statsGeralPanel(allMatches){
+    const wrap = Utils.el("div", { class:"fade-in" });
+    let current = allMatches;
+    const body = Utils.el("div");
+    wrap.appendChild(periodToolbar(allMatches, (from,to) => { current = filterByPeriod(allMatches, from, to); paint(); }));
+    wrap.appendChild(body);
+    function paint(){
+      body.innerHTML = "";
+      const finished = current.filter(m=>m.status==="FINISHED");
+      if(!finished.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum jogo finalizado neste período."])); return; }
       const byMatchday = {};
       finished.forEach(m => { const k=m.matchday||"?"; byMatchday[k]=(byMatchday[k]||0)+ (m.score.fullTime.home||0)+(m.score.fullTime.away||0); });
       const mdLabels = Object.keys(byMatchday).sort((a,b)=>Number(a)-Number(b));
       const mdValues = mdLabels.map(k=>byMatchday[k]);
 
-      // distribuição de placares
       const totalGoals = finished.reduce((s,m)=>s+(m.score.fullTime.home||0)+(m.score.fullTime.away||0),0);
       const avgGoals = (totalGoals/finished.length).toFixed(2);
       const btts = finished.filter(m=>m.score.fullTime.home>0 && m.score.fullTime.away>0).length;
@@ -1734,17 +2018,17 @@ const Views = (function(){
       const draws = finished.filter(m=>m.score.winner==="DRAW").length;
       const awayWins = finished.filter(m=>m.score.winner==="AWAY_TEAM").length;
 
-      const banner = Utils.el("div", { class:"stat-banner" }, [
+      body.appendChild(Utils.el("div", { class:"stat-banner" }, [
         statCell(finished.length, "Jogos disputados"), statCell(totalGoals, "Gols marcados"),
         statCell(avgGoals, "Gols por jogo"), statCell(Math.round(btts/finished.length*100)+"%", "Ambas marcam"),
         statCell(Math.round(over25/finished.length*100)+"%", "Mais de 2.5 gols"),
-      ]);
-      body.appendChild(banner);
+      ]));
 
       const grid = Utils.el("div", { class:"grid grid-2" });
       const c1 = chartCard("Gols por rodada");
       const c2 = chartCard("Resultados (casa / empate / fora)");
-      grid.append(c1.wrap, c2.wrap);
+      const c3 = chartCard("Gols ao longo do tempo");
+      grid.append(c1.wrap, c2.wrap, c3.wrap);
       body.appendChild(grid);
       requestAnimationFrame(() => {
         Charts.barChart(c1.canvas, mdLabels.map(l=>"R"+l), mdValues, { color:"#e0a72e" });
@@ -1754,10 +2038,177 @@ const Views = (function(){
           { label:"Fora", value:awayWins, color:"#4f8ef0" },
         ]);
         c2.wrap.appendChild(legendFor([["Casa","#e0a72e"],["Empate","#6c777c"],["Fora","#4f8ef0"]]));
+        const sorted = finished.slice().sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+        const cum = []; let running = 0;
+        sorted.forEach(m => { running += (m.score.fullTime.home||0)+(m.score.fullTime.away||0); cum.push(running); });
+        Charts.lineChart(c3.canvas, sorted.map(m=>Utils.fmtDate(m.utcDate)), [{ data: cum, color:"#e0a72e" }]);
+      });
+    }
+    paint();
+    return wrap;
+  }
+
+  function statsTimePanel(allMatches, teams){
+    const wrap = Utils.el("div", { class:"fade-in" });
+    const toolbar = Utils.el("div",{class:"analysis-toolbar"});
+    const teamSel = Utils.el("select",{class:"select"});
+    teamSel.appendChild(Utils.el("option",{value:""},["Selecione um time…"]));
+    teams.slice().sort((a,b)=>(a.shortName||a.name).localeCompare(b.shortName||b.name)).forEach(t => teamSel.appendChild(Utils.el("option",{value:t.id},[t.shortName||t.name])));
+    toolbar.appendChild(field("Time", teamSel));
+    wrap.appendChild(toolbar);
+    const body = Utils.el("div"); wrap.appendChild(body);
+    body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione um time acima para ver a análise detalhada."]));
+
+    teamSel.onchange = () => {
+      const teamId = Number(teamSel.value);
+      if(!teamId){ body.innerHTML=""; body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione um time acima para ver a análise detalhada."])); return; }
+      const team = teams.find(t=>t.id===teamId);
+      const played = allMatches.filter(m=>m.status==="FINISHED" && (m.homeTeam.id===teamId || m.awayTeam.id===teamId)).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+      body.innerHTML = "";
+      if(!played.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Esse time ainda não tem jogos finalizados nesta competição."])); return; }
+
+      let gf=0,ga=0,w=0,d=0,l=0;
+      const goalsSeries = [], labels = [];
+      played.forEach(m => {
+        const isHome = m.homeTeam.id===teamId;
+        const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+        const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
+        gf+=my; ga+=opp;
+        if(my>opp) w++; else if(my<opp) l++; else d++;
+        goalsSeries.push(my); labels.push(Utils.fmtDate(m.utcDate));
+      });
+      body.appendChild(Utils.el("div",{class:"stat-banner"},[
+        statCell(played.length,"Jogos"), statCell(w,"Vitórias"), statCell(d,"Empates"), statCell(l,"Derrotas"),
+        statCell(gf,"Gols pró"), statCell(ga,"Gols sofridos"), statCell((gf/played.length).toFixed(2),"Média de gols/jogo"),
+      ]));
+      const grid = Utils.el("div",{class:"grid grid-2"});
+      const c1 = chartCard("Gols marcados por jogo (cronológico)");
+      const c2 = chartCard("Perfil ofensivo/defensivo");
+      grid.append(c1.wrap, c2.wrap);
+      body.appendChild(grid);
+      requestAnimationFrame(() => {
+        Charts.lineChart(c1.canvas, labels, [{ data: goalsSeries, color:"#e0a72e" }]);
+        Charts.radarChart(c2.canvas, ["Ataque","Defesa","Aproveitamento","Consistência"], [{
+          label: team?(team.shortName||team.name):"Time",
+          data: [ Utils.clamp(gf/played.length/3,0,1), Utils.clamp(1-(ga/played.length/3),0,1), Utils.clamp(w/played.length,0,1), Utils.clamp(1-(l/played.length),0,1) ],
+          color: "rgb(224,167,46)",
+        }]);
+      });
+      body.appendChild(sectionBlock("Últimos jogos", played.slice(-6).reverse()));
+    };
+    return wrap;
+  }
+
+  function statsCompararPanel(allMatches, teams){
+    const wrap = Utils.el("div", { class:"fade-in" });
+    const toolbar = Utils.el("div",{class:"analysis-toolbar"});
+    const sortedTeams = teams.slice().sort((a,b)=>(a.shortName||a.name).localeCompare(b.shortName||b.name));
+    const selA = Utils.el("select",{class:"select"},[Utils.el("option",{value:""},["Time A…"]), ...sortedTeams.map(t=>Utils.el("option",{value:t.id},[t.shortName||t.name]))]);
+    const selB = Utils.el("select",{class:"select"},[Utils.el("option",{value:""},["Time B…"]), ...sortedTeams.map(t=>Utils.el("option",{value:t.id},[t.shortName||t.name]))]);
+    toolbar.append(field("Time A", selA), field("Time B", selB));
+    wrap.appendChild(toolbar);
+    const body = Utils.el("div"); wrap.appendChild(body);
+    body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione dois times para comparar."]));
+
+    function paint(){
+      const idA = Number(selA.value), idB = Number(selB.value);
+      if(!idA || !idB || idA===idB){ body.innerHTML=""; body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione dois times diferentes para comparar."])); return; }
+      const teamA = teams.find(t=>t.id===idA), teamB = teams.find(t=>t.id===idB);
+      const formA = Predict.teamForm(idA, allMatches);
+      const formB = Predict.teamForm(idB, allMatches);
+      body.innerHTML = "";
+      if(!formA && !formB){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum dos dois times tem jogos finalizados nesta competição ainda."])); return; }
+
+      const grid = Utils.el("div",{class:"grid grid-2"});
+      const c1 = chartCard("Comparativo (gols marcados/sofridos por jogo)");
+      const c2 = chartCard("Perfil comparado");
+      grid.append(c1.wrap, c2.wrap);
+      body.appendChild(grid);
+      requestAnimationFrame(() => {
+        Charts.groupedBarChart(c1.canvas, ["Gols feitos","Gols sofridos"],
+          { data:[formA?formA.gfAvg:0, formA?formA.gaAvg:0], color:"#e0a72e" },
+          { data:[formB?formB.gfAvg:0, formB?formB.gaAvg:0], color:"#4f8ef0" });
+        c1.wrap.appendChild(legendFor([[teamA.shortName||teamA.name,"#e0a72e"],[teamB.shortName||teamB.name,"#4f8ef0"]]));
+        Charts.radarChart(c2.canvas, ["Ataque","Defesa","Vitórias","Jogos"], [
+          { label:teamA.shortName||teamA.name, data:[Utils.clamp((formA?formA.gfAvg:0)/3,0,1), Utils.clamp(1-((formA?formA.gaAvg:0)/3),0,1), formA?formA.winRate:0, Utils.clamp((formA?formA.n:0)/6,0,1)], color:"rgb(224,167,46)" },
+          { label:teamB.shortName||teamB.name, data:[Utils.clamp((formB?formB.gfAvg:0)/3,0,1), Utils.clamp(1-((formB?formB.gaAvg:0)/3),0,1), formB?formB.winRate:0, Utils.clamp((formB?formB.n:0)/6,0,1)], color:"rgb(79,142,240)" },
+        ]);
+        c2.wrap.appendChild(legendFor([[teamA.shortName||teamA.name,"#e0a72e"],[teamB.shortName||teamB.name,"#4f8ef0"]]));
       });
 
-    }catch(err){ body.innerHTML=""; body.appendChild(errorState(err, renderStats)); }
+      // confrontos diretos dentro dos jogos carregados desta competição
+      const h2h = allMatches.filter(m=>m.status==="FINISHED" && ((m.homeTeam.id===idA&&m.awayTeam.id===idB)||(m.homeTeam.id===idB&&m.awayTeam.id===idA)));
+      body.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:8px"},["Confrontos diretos nesta competição"]));
+      if(!h2h.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum confronto direto encontrado nos dados carregados desta competição."])); return; }
+      const h2hWrap = Utils.el("div");
+      h2h.forEach(m => h2hWrap.appendChild(Utils.el("div",{class:"h2h-row"},[
+        Utils.el("span",{},[Utils.fmtDate(m.utcDate)]),
+        Utils.el("span",{},[(m.homeTeam.shortName||m.homeTeam.name)+" "+m.score.fullTime.home+" × "+m.score.fullTime.away+" "+(m.awayTeam.shortName||m.awayTeam.name)]),
+      ])));
+      body.appendChild(h2hWrap);
+    }
+    selA.onchange = paint; selB.onchange = paint;
+    return wrap;
   }
+
+  function statsJogoPanel(allMatches){
+    const wrap = Utils.el("div", { class:"fade-in" });
+    const toolbar = Utils.el("div",{class:"analysis-toolbar"});
+    const finished = allMatches.filter(m=>m.status==="FINISHED").sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
+    const matchSel = Utils.el("select",{class:"select"},[Utils.el("option",{value:""},["Selecione um jogo…"]), ...finished.map(m=>Utils.el("option",{value:m.id},[Utils.fmtDate(m.utcDate)+" · "+(m.homeTeam.shortName||m.homeTeam.name)+" "+m.score.fullTime.home+"×"+m.score.fullTime.away+" "+(m.awayTeam.shortName||m.awayTeam.name)]))]);
+    toolbar.appendChild(field("Jogo", matchSel));
+    wrap.appendChild(toolbar);
+    const body = Utils.el("div"); wrap.appendChild(body);
+    body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione um jogo encerrado para ver os detalhes."]));
+
+    matchSel.onchange = async () => {
+      const id = matchSel.value;
+      if(!id){ body.innerHTML=""; body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione um jogo encerrado para ver os detalhes."])); return; }
+      body.innerHTML = ""; body.appendChild(loadingBlock(1));
+      try{
+        const data = await Api.matchDetail(id);
+        const m = data.match || data;
+        body.innerHTML = "";
+        const head = Utils.el("div",{class:"vs-row"},[
+          Utils.crestImg(m.homeTeam,24), m.homeTeam.shortName||m.homeTeam.name,
+          Utils.el("span",{class:"vs"},[m.score.fullTime.home+" × "+m.score.fullTime.away]),
+          m.awayTeam.shortName||m.awayTeam.name, Utils.crestImg(m.awayTeam,24),
+        ]);
+        body.appendChild(head);
+        body.appendChild(infoPanel(m));
+        body.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:20px"},["Linha do tempo"]));
+        body.appendChild(eventsPanel(m));
+        const openBtn = Utils.el("button",{class:"btn btn-sm",style:"margin-top:16px"},["Abrir jogo completo"]);
+        openBtn.onclick = () => location.hash = "#/jogos/match/"+id;
+        body.appendChild(openBtn);
+      }catch(err){ body.innerHTML=""; body.appendChild(errorState(err)); }
+    };
+    return wrap;
+  }
+
+  async function statsArtilheirosPanel(host, comp){
+    host.innerHTML = ""; host.appendChild(loadingBlock(1));
+    try{
+      const data = await Api.scorers(comp);
+      const scorers = data.scorers || [];
+      host.innerHTML = "";
+      if(!scorers.length){ host.appendChild(Utils.el("div",{class:"empty-state"},["Artilharia não disponível para esta competição no plano atual da API."])); return; }
+      const top = scorers.slice(0,15);
+      const c = chartCard("Top artilheiros (gols)");
+      host.appendChild(c.wrap);
+      requestAnimationFrame(() => Charts.barChart(c.canvas, top.slice(0,8).map(s=>(s.player.name||"").split(" ").slice(-1)[0]), top.slice(0,8).map(s=>s.goals||0), { color:"#e0a72e" }));
+      const list = Utils.el("div",{class:"section",style:"margin-top:16px"});
+      list.appendChild(Utils.el("div",{class:"section-title"},["Lista completa"]));
+      top.forEach((s,i) => list.appendChild(Utils.el("div",{class:"player-row"},[
+        Utils.el("span",{class:"rank"},[String(i+1)]),
+        Utils.crestImg(s.team,20),
+        Utils.el("span",{class:"pname"},[s.player.name + " · "+(s.team.shortName||s.team.name)]),
+        Utils.el("span",{class:"pgoals"},[String(s.goals||0)+" gols"]),
+      ])));
+      host.appendChild(list);
+    }catch(err){ host.innerHTML=""; host.appendChild(errorState(err, ()=>statsArtilheirosPanel(host, comp))); }
+  }
+
   function statCell(val,label){ return Utils.el("div",{class:"cell"},[Utils.el("b",{},[String(val)]), Utils.el("span",{},[label])]); }
   function chartCard(title){
     const wrap = Utils.el("div",{class:"chart-card"},[Utils.el("div",{class:"section-title"},[title])]);
@@ -1771,12 +2222,72 @@ const Views = (function(){
     return l;
   }
 
+  /* ---------- PREVISÃO IA (página dedicada) ---------- */
+  async function renderPredictPage(){
+    const comp = Api.getComp();
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Previsão IA"]), Utils.el("p",{class:"view-sub"},["Escolha dois times (ou um jogo agendado) e gere uma previsão estatística com dados reais"]) ]),
+    ]));
+
+    const toolbar = Utils.el("div",{class:"analysis-toolbar"});
+    main().appendChild(toolbar);
+    const resultHost = Utils.el("div"); main().appendChild(resultHost);
+    resultHost.appendChild(loadingBlock(1));
+
+    let teams = [], upcoming = [];
+    try{
+      const [teamsData, matchesData] = await Promise.all([ Api.teams(comp).catch(()=>({teams:[]})), Api.matches(comp,"").catch(()=>({matches:[]})) ]);
+      teams = teamsData.teams || [];
+      upcoming = (matchesData.matches||[]).filter(m=>m.status==="SCHEDULED"||m.status==="TIMED").sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+    }catch(err){ resultHost.innerHTML=""; resultHost.appendChild(errorState(err, renderPredictPage)); return; }
+    resultHost.innerHTML = "";
+    resultHost.appendChild(Utils.el("div",{class:"empty-state"},["Escolha um confronto acima (ou dois times) e toque em Gerar previsão."]));
+
+    const sortedTeams = teams.slice().sort((a,b)=>(a.shortName||a.name).localeCompare(b.shortName||b.name));
+    const matchSel = Utils.el("select",{class:"select"},[
+      Utils.el("option",{value:""},["Jogo agendado (opcional)…"]),
+      ...upcoming.slice(0,30).map(m=>Utils.el("option",{value:m.id},[Utils.fmtDateTime(m.utcDate)+" · "+(m.homeTeam.shortName||m.homeTeam.name)+" x "+(m.awayTeam.shortName||m.awayTeam.name)])),
+    ]);
+    const homeSel = Utils.el("select",{class:"select"},[Utils.el("option",{value:""},["Time da casa…"]), ...sortedTeams.map(t=>Utils.el("option",{value:t.id},[t.shortName||t.name]))]);
+    const awaySel = Utils.el("select",{class:"select"},[Utils.el("option",{value:""},["Time visitante…"]), ...sortedTeams.map(t=>Utils.el("option",{value:t.id},[t.shortName||t.name]))]);
+    toolbar.append(field("Jogo agendado", matchSel), field("Casa", homeSel), field("Visitante", awaySel));
+    const genBtn = Utils.el("button",{class:"btn btn-gold"},["Gerar previsão"]);
+    toolbar.appendChild(genBtn);
+
+    matchSel.onchange = () => {
+      if(!matchSel.value) return;
+      const m = upcoming.find(x=>String(x.id)===matchSel.value);
+      if(m){ homeSel.value = m.homeTeam.id; awaySel.value = m.awayTeam.id; }
+    };
+
+    genBtn.onclick = async () => {
+      const homeId = Number(homeSel.value), awayId = Number(awaySel.value);
+      if(!homeId || !awayId || homeId===awayId){ Toast.show("Selecione dois times diferentes", "Escolha o time da casa e o visitante para gerar a previsão."); return; }
+      const homeTeam = teams.find(t=>t.id===homeId), awayTeam = teams.find(t=>t.id===awayId);
+      resultHost.innerHTML = ""; resultHost.appendChild(loadingBlock(1));
+      try{
+        const [homeMatchesRes, awayMatchesRes] = await Promise.all([
+          Api.teamMatches(homeId, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
+          Api.teamMatches(awayId, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
+        ]);
+        let standings = null;
+        try{ standings = await Api.standings(comp); }catch(e){}
+        const ctx = { matches: [...(homeMatchesRes.matches||[]), ...(awayMatchesRes.matches||[])], standings };
+        const pred = Predict.predictMatch(homeTeam, awayTeam, ctx);
+        resultHost.innerHTML = "";
+        resultHost.appendChild(predictionCard(homeTeam, awayTeam, pred));
+      }catch(err){ resultHost.innerHTML=""; resultHost.appendChild(errorState(err)); }
+    };
+  }
+
   /* ---------- PALPITES (página) ---------- */
   async function renderGuesses(){
     main().innerHTML = "";
     const comp = Api.getComp();
     main().appendChild(Utils.el("div", { class:"view-head" }, [
-      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Meus Palpites"]), Utils.el("p",{class:"view-sub"},["Histórico, acertos e sequência — tudo salvo no seu navegador"]) ]),
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Meus Palpites" + Profile.greeting()]), Utils.el("p",{class:"view-sub"},["Histórico, acertos e sequência — tudo salvo no seu navegador"]) ]),
     ]));
     const s = Guesses.stats();
     main().appendChild(Utils.el("div", { class:"stat-banner" }, [
@@ -1784,16 +2295,55 @@ const Views = (function(){
       statCell(s.correct, "Resultados certos"), statCell(s.exact, "Placares exatos"),
       statCell(s.pct+"%", "Precisão"), statCell(s.streak.current, "Sequência atual"),
     ]));
-    const listWrap = Utils.el("div"); main().appendChild(listWrap);
-    const guesses = Guesses.all();
-    const ids = Object.keys(guesses);
-    if(!ids.length){ listWrap.appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum palpite ainda"]), "Abra um jogo agendado e registre seu placar antes do apito inicial."])); return; }
-    if(!Api.getKey()){ listWrap.appendChild(noKeyState()); return; }
-    listWrap.appendChild(loadingBlock(3));
+
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+
+    // ---- novo palpite: escolhe um jogo agendado direto nesta página ----
+    const newSec = Utils.el("div",{class:"section"});
+    newSec.appendChild(Utils.el("div",{class:"section-title"},["Novo palpite"]));
+    const quickCard = Utils.el("div",{class:"quick-guess-card"});
+    newSec.appendChild(quickCard);
+    quickCard.appendChild(loadingBlock(1));
+    main().appendChild(newSec);
+
+    const listWrap = Utils.el("div",{class:"section"});
+    listWrap.appendChild(Utils.el("div",{class:"section-title"},["Histórico de palpites"]));
+    const listBody = Utils.el("div"); listWrap.appendChild(listBody);
+    main().appendChild(listWrap);
+    listBody.appendChild(loadingBlock(3));
+
     try{
       const data = await Api.matches(comp, "");
-      const byId = {}; (data.matches||[]).forEach(m=>byId[m.id]=m);
-      listWrap.innerHTML = "";
+      const matches = data.matches || [];
+      const byId = {}; matches.forEach(m=>byId[m.id]=m);
+      const upcoming = matches.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED").sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+
+      // quick-guess: select de jogo + formulário inline
+      quickCard.innerHTML = "";
+      if(!upcoming.length){
+        quickCard.appendChild(Utils.el("div",{class:"empty-state"},["Não há jogos agendados nesta competição no momento."]));
+      } else {
+        const sel = Utils.el("select",{class:"select",style:"width:100%"},[
+          Utils.el("option",{value:""},["Escolha um jogo agendado para palpitar…"]),
+          ...upcoming.slice(0,30).map(m=>Utils.el("option",{value:m.id},[Utils.fmtDateTime(m.utcDate)+" · "+(m.homeTeam.shortName||m.homeTeam.name)+" x "+(m.awayTeam.shortName||m.awayTeam.name)])),
+        ]);
+        quickCard.appendChild(sel);
+        const formHost = Utils.el("div",{style:"margin-top:14px"});
+        quickCard.appendChild(formHost);
+        sel.onchange = () => {
+          formHost.innerHTML = "";
+          if(!sel.value) return;
+          const m = byId[sel.value];
+          const existing = Guesses.get(m.id);
+          formHost.appendChild(buildGuessForm(m, existing, () => { sel.onchange(); renderGuesses(); }));
+        };
+      }
+
+      // histórico
+      listBody.innerHTML = "";
+      const guesses = Guesses.all();
+      const ids = Object.keys(guesses);
+      if(!ids.length){ listBody.appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum palpite ainda"]), "Use o formulário acima para registrar seu placar antes do apito inicial."])); return; }
       const grid = Utils.el("div",{class:"grid grid-2"});
       ids.forEach(id => {
         const m = byId[id]; const g = guesses[id];
@@ -1801,7 +2351,7 @@ const Views = (function(){
         if(m.status === "FINISHED") Guesses.evaluate(id, m);
         const card = Utils.el("div",{class:"match-card"},[]);
         card.onclick = () => location.hash = "#/jogos/match/"+id;
-        card.appendChild(Utils.el("div",{class:"mc-top"},[Utils.el("span",{},[m.homeTeam.shortName+" x "+m.awayTeam.shortName]), statusChip(m)]));
+        card.appendChild(Utils.el("div",{class:"mc-top"},[Utils.el("span",{},[(m.homeTeam.shortName||m.homeTeam.name)+" x "+(m.awayTeam.shortName||m.awayTeam.name)]), statusChip(m)]));
         card.appendChild(Utils.el("div",{class:"mc-meta"},["Seu palpite: "+g.home+" × "+g.away]));
         if(m.status==="FINISHED"){
           card.appendChild(Utils.el("div",{class:"mc-meta"},["Real: "+m.score.fullTime.home+" × "+m.score.fullTime.away]));
@@ -1809,34 +2359,103 @@ const Views = (function(){
         }
         grid.appendChild(card);
       });
-      listWrap.appendChild(grid);
-    }catch(err){ listWrap.innerHTML=""; listWrap.appendChild(errorState(err, renderGuesses)); }
+      listBody.appendChild(grid);
+    }catch(err){
+      quickCard.innerHTML=""; quickCard.appendChild(errorState(err, renderGuesses));
+      listBody.innerHTML=""; listBody.appendChild(errorState(err, renderGuesses));
+    }
   }
 
-  /* ---------- FAVORITOS ---------- */
+  /* ---------- FAVORITOS (busca + favoritar por competição) ---------- */
   async function renderFavorites(){
     main().innerHTML = "";
     main().appendChild(Utils.el("div", { class:"view-head" }, [
-      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Favoritos"]), Utils.el("p",{class:"view-sub"},["Times que você está de olho"]) ]),
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Favoritos"]), Utils.el("p",{class:"view-sub"},["Times que você está de olho — um time favorito por competição"]) ]),
     ]));
-    const favs = Favorites.getAll();
-    if(!favs.teams.length){ main().appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum favorito ainda"]),"Toque na estrela ★ ao lado de um time na Classificação para favoritá-lo."])); return; }
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
-    const grid = Utils.el("div",{class:"grid grid-4"}); main().appendChild(grid); grid.appendChild(loadingBlock(4));
-    try{
-      const comp = Api.getComp();
-      const data = await Api.teams(comp);
-      grid.innerHTML = "";
-      const teams = (data.teams||[]).filter(t=>favs.teams.includes(t.id));
-      teams.forEach(t => {
-        const card = Utils.el("a",{class:"match-card",href:"#/time/"+t.id,style:"text-align:center"},[
+
+    // abas por competição
+    const compTabRow = Utils.el("div",{class:"comp-tab-row"});
+    main().appendChild(compTabRow);
+    let activeComp = Api.getComp();
+    const tabs = {};
+    Api.COMPETITIONS.forEach(c => {
+      const t = Utils.el("button",{class:"comp-tab"+(c===activeComp?" active":"")},[c, Utils.el("span",{class:"count"},["("+Favorites.countForComp(c)+")"])]);
+      t.onclick = () => { activeComp = c; Object.values(tabs).forEach(x=>x.classList.remove("active")); t.classList.add("active"); paintComp(); };
+      tabs[c]=t; compTabRow.appendChild(t);
+    });
+
+    // busca para adicionar favorito dentro da competição ativa
+    const searchSec = Utils.el("div",{class:"section"});
+    searchSec.appendChild(Utils.el("div",{class:"section-title"},["Adicionar favorito"]));
+    const searchInput = Utils.el("input",{class:"select",style:"width:100%;max-width:360px",type:"text",placeholder:"Digite o nome do time…"});
+    searchSec.appendChild(searchInput);
+    const resultsHost = Utils.el("div",{style:"margin-top:12px"});
+    searchSec.appendChild(resultsHost);
+    main().appendChild(searchSec);
+
+    const favSec = Utils.el("div",{class:"section"});
+    favSec.appendChild(Utils.el("div",{class:"section-title"},["Seus favoritos"]));
+    const favGrid = Utils.el("div",{class:"grid grid-4"});
+    favSec.appendChild(favGrid);
+    main().appendChild(favSec);
+
+    let teamsCache = {}; // comp -> teams[]
+    async function getTeamsFor(comp){
+      if(teamsCache[comp]) return teamsCache[comp];
+      const data = await Api.teams(comp).catch(()=>({teams:[]}));
+      teamsCache[comp] = data.teams || [];
+      return teamsCache[comp];
+    }
+
+    async function paintResults(){
+      const q = Utils.normalize(searchInput.value.trim());
+      resultsHost.innerHTML = "";
+      if(!q){ return; }
+      resultsHost.appendChild(loadingBlock(1));
+      const teams = await getTeamsFor(activeComp);
+      const matches = teams.filter(t => Utils.normalize(t.name).includes(q) || Utils.normalize(t.shortName).includes(q) || Utils.normalize(t.tla).includes(q));
+      resultsHost.innerHTML = "";
+      if(!matches.length){ resultsHost.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum time encontrado em "+activeComp+" com esse nome."])); return; }
+      const list = Utils.el("div",{class:"search-results"});
+      matches.slice(0,12).forEach(t => {
+        const isFav = Favorites.isFavTeam(t.id, activeComp);
+        const row = Utils.el("div",{class:"search-result-row"},[
+          Utils.crestImg(t,24),
+          Utils.el("span",{class:"name"},[t.name]),
+          (()=>{ const b = Utils.el("button",{class:"btn add-fav-btn"+(isFav?" added":"")},[isFav?"★ Favoritado":"+ Favoritar"]);
+            b.onclick = () => { const f = Favorites.toggleTeam(t.id, activeComp); b.classList.toggle("added", f); b.textContent = f?"★ Favoritado":"+ Favoritar"; tabs[activeComp].lastChild.textContent = "("+Favorites.countForComp(activeComp)+")"; paintFavGrid(); };
+            return b; })(),
+        ]);
+        list.appendChild(row);
+      });
+      resultsHost.appendChild(list);
+    }
+    searchInput.addEventListener("input", Utils.debounce(paintResults, 250));
+
+    async function paintFavGrid(){
+      const ids = Favorites.getTeamsForComp(activeComp);
+      favGrid.innerHTML = "";
+      if(!ids.length){ favGrid.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum favorito em "+activeComp+" ainda. Use a busca acima para adicionar."])); return; }
+      favGrid.appendChild(loadingBlock(ids.length));
+      const teams = await getTeamsFor(activeComp);
+      favGrid.innerHTML = "";
+      ids.forEach(id => {
+        const t = teams.find(x=>x.id===id) || { id, name:"Time #"+id, shortName:"Time #"+id };
+        const card = Utils.el("div",{class:"match-card",style:"text-align:center"},[
           Utils.crestImg(t,48),
           Utils.el("div",{style:"font-weight:700;margin-top:10px"},[t.shortName||t.name]),
+          Utils.el("div",{style:"margin-top:10px;display:flex;gap:8px;justify-content:center"},[
+            (()=>{ const a = Utils.el("a",{class:"btn btn-sm",href:"#/time/"+t.id},["Ver time"]); return a; })(),
+            (()=>{ const r = Utils.el("button",{class:"btn btn-sm"},["Remover"]); r.onclick=()=>{ Favorites.toggleTeam(t.id, activeComp); tabs[activeComp].lastChild.textContent = "("+Favorites.countForComp(activeComp)+")"; paintFavGrid(); }; return r; })(),
+          ]),
         ]);
-        grid.appendChild(card);
+        favGrid.appendChild(card);
       });
-      if(!teams.length) grid.appendChild(Utils.el("div",{class:"empty-state"},["Times favoritos não encontrados na competição atual."]));
-    }catch(err){ grid.innerHTML=""; grid.appendChild(errorState(err, renderFavorites)); }
+    }
+
+    function paintComp(){ searchInput.value=""; resultsHost.innerHTML=""; paintFavGrid(); }
+    paintComp();
   }
 
   /* ---------- PÁGINA DE TIME ---------- */
@@ -1844,13 +2463,15 @@ const Views = (function(){
     main().innerHTML = "";
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
     main().appendChild(loadingBlock(1));
+    teamId = Number(teamId);
     try{
       const [team, matchesRes] = await Promise.all([
         Api.team(teamId),
         Api.teamMatches(teamId, "?limit=15"),
       ]);
       main().innerHTML = "";
-      const isFav = Favorites.isFavTeam(team.id);
+      const comp = Api.getComp();
+      const isFav = Favorites.isFavTeam(team.id, comp);
       const head = Utils.el("div", { class:"view-head" }, [
         Utils.el("div", { style:"display:flex;align-items:center;gap:14px" }, [
           Utils.crestImg(team, 48),
@@ -1858,7 +2479,7 @@ const Views = (function(){
         ]),
       ]);
       const star = Utils.el("button",{class:"btn"+(isFav?" btn-gold":"")},[isFav?"★ Favorito":"☆ Favoritar"]);
-      star.onclick=()=>{ const f=Favorites.toggleTeam(team.id); star.textContent = f?"★ Favorito":"☆ Favoritar"; star.classList.toggle("btn-gold",f); };
+      star.onclick=()=>{ const f=Favorites.toggleTeam(team.id, comp); star.textContent = f?"★ Favorito":"☆ Favoritar"; star.classList.toggle("btn-gold",f); };
       head.appendChild(star);
       main().appendChild(head);
 
@@ -1892,7 +2513,7 @@ const Views = (function(){
           ]));
         });
         main().appendChild(sqGrid);
-        main().appendChild(Utils.el("p",{style:"font-size:.72rem;color:var(--text-2);margin-top:8px"},["Estatísticas detalhadas por jogador (gols, cartões, minutos) dependem do nível de acesso da API e ficam disponíveis para os artilheiros em Estatísticas → Artilharia, quando suportado pela competição."]));
+        main().appendChild(Utils.el("p",{style:"font-size:.72rem;color:var(--text-2);margin-top:8px"},["Estatísticas detalhadas por jogador (gols, cartões, minutos) dependem do nível de acesso da API e ficam disponíveis para os artilheiros em Estatísticas → Artilheiros, quando suportado pela competição."]));
       }
     }catch(err){ main().innerHTML=""; main().appendChild(errorState(err, ()=>renderTeam(teamId))); }
   }
@@ -1907,7 +2528,7 @@ const Views = (function(){
 
   return {
     renderHome, renderMatches, openMatchModal, renderMatchModal, renderStandings,
-    renderBracket, renderStats, renderGuesses, renderFavorites, renderTeam, errorState, noKeyState,
+    renderBracket, renderStats, renderPredictPage, renderGuesses, renderFavorites, renderTeam, errorState, noKeyState,
   };
 })();
 
@@ -1915,12 +2536,22 @@ const Views = (function(){
    13. APP — bootstrap, eventos globais e configurações
    ---------------------------------------------------------------- */
 function openSettings(){
+  document.getElementById("userNameInput").value = Profile.getName();
   document.getElementById("apiKeyInput").value = Api.getKey();
   document.getElementById("compSelect").value = Api.getComp();
   document.getElementById("settingsModal").classList.add("open");
 }
 function closeSettings(){ document.getElementById("settingsModal").classList.remove("open"); }
 function closeMatchModal(){ document.getElementById("matchModal").classList.remove("open"); }
+
+function toggleMobileNav(force){
+  const nav = document.getElementById("mainNav");
+  const hb = document.getElementById("hamburgerBtn");
+  const open = force !== undefined ? force : !nav.classList.contains("open");
+  nav.classList.toggle("open", open);
+  hb.classList.toggle("open", open);
+  hb.setAttribute("aria-expanded", open ? "true" : "false");
+}
 
 function initApp(){
   Theme.init();
@@ -1929,14 +2560,28 @@ function initApp(){
   // rotas
   Router.on("/", Views.renderHome);
   Router.on("/jogos", Views.renderMatches);
-  Router.on("/jogos/match", (id) => { Views.renderMatches().then(()=>Views.openMatchModal(id)); Views.openMatchModal(id); });
+  Router.on("/jogos/match", (id) => { Views.openMatchModal(id); });
   Router.on("/classificacao", Views.renderStandings);
   Router.on("/mata-mata", Views.renderBracket);
   Router.on("/estatisticas", Views.renderStats);
+  Router.on("/previsao", Views.renderPredictPage);
   Router.on("/palpites", Views.renderGuesses);
   Router.on("/favoritos", Views.renderFavorites);
   Router.on("/time", Views.renderTeam);
   Router.init();
+
+  // menu hamburguer (mobile): abre/fecha e retrai ao clicar num link ou fora dele
+  document.getElementById("hamburgerBtn").onclick = (e) => { e.stopPropagation(); toggleMobileNav(); };
+  document.getElementById("mainNav").addEventListener("click", (e) => {
+    if(e.target.closest(".nav-link")) toggleMobileNav(false);
+  });
+  document.addEventListener("click", (e) => {
+    const nav = document.getElementById("mainNav");
+    if(!nav.classList.contains("open")) return;
+    if(e.target.closest("#mainNav") || e.target.closest("#hamburgerBtn")) return;
+    toggleMobileNav(false);
+  });
+  window.addEventListener("resize", Utils.debounce(() => { if(window.innerWidth > 860) toggleMobileNav(false); }, 150));
 
   // header actions
   document.getElementById("themeBtn").onclick = Theme.toggle;
@@ -1947,16 +2592,18 @@ function initApp(){
   document.getElementById("settingsModal").addEventListener("click", (e)=>{ if(e.target.id==="settingsModal") closeSettings(); });
   document.getElementById("modalCloseBtn").onclick = () => { closeMatchModal(); location.hash = "#/jogos"; };
   document.getElementById("matchModal").addEventListener("click", (e)=>{ if(e.target.id==="matchModal"){ closeMatchModal(); location.hash="#/jogos"; } });
-  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeSettings(); closeMatchModal(); } });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeSettings(); closeMatchModal(); toggleMobileNav(false); } });
 
   document.getElementById("saveSettingsBtn").onclick = () => {
+    const name = document.getElementById("userNameInput").value.trim();
     const key = document.getElementById("apiKeyInput").value.trim();
     const comp = document.getElementById("compSelect").value;
     if(!key){ document.getElementById("settingsMsg").textContent = "Cole uma chave válida."; return; }
+    Profile.setName(name);
     Store.set("apiKey", key); Store.set("competition", comp);
     Api.invalidate("");
     closeSettings();
-    Toast.show("Configurado!", "Carregando dados da competição "+comp+"…");
+    Toast.show("Configurado!" + (name ? " Valeu, "+name+"!" : ""), "Carregando dados da competição "+comp+"…");
     Router.resolve();
   };
 
@@ -1983,6 +2630,8 @@ function initApp(){
     return data.matches || [];
   });
 
+  // se um gol/início/fim de jogo acontecer enquanto a Home está aberta, atualiza na hora
+  Notify.onUpdate(() => { if(Router.current() === "/") Views.renderHome(); });
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
