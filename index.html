@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WorldCup AI — Acompanhamento e Previsões da Copa</title>
+<meta name="description" content="Acompanhe a Copa do Mundo em tempo real: jogos, chaveamento, estatísticas e previsões de IA. Dados via football-data.org.">
+
+<style>
+/* =====================================================================
+   WORLDCUP AI — CSS
+   Conceito visual: "Placar Eletrônico de Estádio"
+   Fundo grafite quase preto · números sempre em mono · display condensada
+   para títulos · verde-grama = AO VIVO · dourado = previsão de IA
+   ===================================================================== */
+
+/* ---------- 1. Tokens ---------- */
+:root{
+  --bg-0:#0a0d0f; --bg-1:#12171a; --bg-2:#1a2125; --bg-3:#222a2f;
+  --line:#2b3338; --line-soft:#1c2327;
+  --text-0:#f2f4f3; --text-1:#aab4b8; --text-2:#6c777c;
+
+  --live:#36c46b; --live-bg:rgba(54,196,107,.12);
+  --gold:#e0a72e; --gold-bg:rgba(224,167,46,.12);
+  --red:#e6483f; --red-bg:rgba(230,72,63,.12);
+  --yellow-card:#f0c419; --blue:#4f8ef0;
+
+  --grad-gold:linear-gradient(135deg,#f3c463 0%,#e0a72e 55%,#b9831c 100%);
+  --grad-live:linear-gradient(135deg,#54e08a 0%,#36c46b 60%,#239151 100%);
+
+  --font-display:"Archivo Narrow","Arial Narrow",sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+  --font-mono:"JetBrains Mono","IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  --radius-sm:2px; --radius-md:5px; --radius-lg:8px;
+  --maxw:1280px; --header-h:60px;
+  --shadow-md:0 4px 18px rgba(0,0,0,.45);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.55);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"]{
+  --bg-0:#f2f1ec; --bg-1:#ffffff; --bg-2:#f8f7f3; --bg-3:#eae7df;
+  --line:#dcd8cf; --line-soft:#e8e5dc;
+  --text-0:#15191b; --text-1:#4d565a; --text-2:#838c8f;
+  --live-bg:rgba(35,145,81,.10); --gold-bg:rgba(185,131,28,.12); --red-bg:rgba(230,72,63,.08);
+  --shadow-md:0 4px 18px rgba(0,0,0,.08); --shadow-lg:0 16px 48px rgba(0,0,0,.12);
+}
+
+/* ---------- 2. Reset ---------- */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+[data-theme="light"] html{color-scheme:light}
+body{
+  background:var(--bg-0); color:var(--text-0); font-family:var(--font-body);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  min-height:100vh; transition:background .25s var(--ease),color .25s var(--ease);
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select{font:inherit;color:inherit;background:none;border:none}
+ul{list-style:none}
+::selection{background:var(--gold);color:#15191b}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg-0)}
+::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:8px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mono{font-family:var(--font-mono)}
+.hidden{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ---------- 3. Layout shell ---------- */
+.app-shell{min-height:100vh;display:flex;flex-direction:column}
+.container{max-width:var(--maxw);margin:0 auto;padding:0 var(--sp-5);width:100%}
+
+/* ---------- 4. Header ---------- */
+.site-header{
+  position:sticky;top:0;z-index:50;height:var(--header-h);
+  background:color-mix(in srgb, var(--bg-1) 92%, transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+}
+.site-header .container{height:100%;display:flex;align-items:center;gap:var(--sp-5)}
+.brand{display:flex;align-items:center;gap:var(--sp-2);font-family:var(--font-display);font-weight:700;letter-spacing:.02em;font-size:1.15rem;white-space:nowrap}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--grad-live);box-shadow:0 0 0 3px var(--live-bg)}
+.brand b{color:var(--gold)}
+.main-nav{display:flex;gap:var(--sp-1);flex:1;overflow-x:auto;scrollbar-width:none}
+.main-nav::-webkit-scrollbar{display:none}
+.nav-link{
+  padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);font-size:var(--fs-sm,.8125rem);
+  font-weight:600;color:var(--text-1);white-space:nowrap;transition:.15s var(--ease);
+  text-transform:uppercase;letter-spacing:.04em;font-size:.72rem;
+}
+.nav-link:hover{color:var(--text-0);background:var(--bg-2)}
+.nav-link.active{color:var(--bg-0);background:var(--gold)}
+.header-actions{display:flex;align-items:center;gap:var(--sp-2)}
+.icon-btn{
+  width:36px;height:36px;display:grid;place-items:center;border-radius:var(--radius-sm);
+  color:var(--text-1);transition:.15s var(--ease);border:1px solid transparent;
+}
+.icon-btn:hover{background:var(--bg-2);color:var(--text-0)}
+.icon-btn.is-active{color:var(--gold);border-color:var(--gold)}
+.search-box{position:relative;display:none}
+.search-box input{
+  width:200px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:7px 10px 7px 32px;font-size:.8rem;color:var(--text-0);transition:.15s var(--ease);
+}
+.search-box input:focus{border-color:var(--gold);width:240px}
+.search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-2);pointer-events:none}
+@media (min-width:880px){.search-box{display:block}}
+
+/* ---------- 5. Botões e chips ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);
+  font-weight:700;font-size:.78rem;letter-spacing:.03em;text-transform:uppercase;
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--line);transition:.15s var(--ease);
+}
+.btn:hover{border-color:var(--text-2)}
+.btn-gold{background:var(--grad-gold);color:#1a1306;border:none}
+.btn-gold:hover{filter:brightness(1.08)}
+.btn-ghost{background:none;border:1px solid var(--line)}
+.btn-sm{padding:6px 11px;font-size:.7rem}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
+  font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  background:var(--bg-3);color:var(--text-1);
+}
+.chip.live{background:var(--live-bg);color:var(--live)}
+.chip.live .pulse{width:6px;height:6px;border-radius:50%;background:var(--live);animation:pulse 1.4s infinite}
+.chip.finished{background:var(--bg-3);color:var(--text-2)}
+.chip.scheduled{background:var(--blue,#4f8ef0);background:color-mix(in srgb, var(--blue) 16%, transparent);color:var(--blue)}
+.chip.gold{background:var(--gold-bg);color:var(--gold)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* ---------- 6. Hero / dashboard ---------- */
+.view{padding:var(--sp-6) 0 var(--sp-7)}
+.view-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-5);flex-wrap:wrap}
+.view-title{font-family:var(--font-display);font-size:1.9rem;font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
+.view-sub{color:var(--text-2);font-size:.85rem;margin-top:2px}
+.section-title{
+  font-family:var(--font-display);font-size:.85rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text-1);display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);
+}
+.section-title::before{content:"";width:3px;height:14px;background:var(--gold);display:block}
+.section{margin-bottom:var(--sp-7)}
+
+.hero-strip{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--sp-6);
+}
+.hero-cell{background:var(--bg-1);padding:var(--sp-4) var(--sp-5)}
+.hero-cell .lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);font-weight:700;margin-bottom:6px}
+.hero-cell .val{font-family:var(--font-mono);font-size:1.6rem;font-weight:700}
+.hero-cell .val.live{color:var(--live)}
+.hero-cell .val.gold{color:var(--gold)}
+.countdown{display:flex;gap:var(--sp-3)}
+.countdown .seg{text-align:center}
+.countdown .seg b{display:block;font-family:var(--font-mono);font-size:1.4rem}
+.countdown .seg span{font-size:.6rem;color:var(--text-2);text-transform:uppercase}
+
+/* ---------- 7. Grids de cards ---------- */
+.grid{display:grid;gap:var(--sp-3)}
+.grid-3{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.grid-2{grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.empty-state{
+  border:1px dashed var(--line);border-radius:var(--radius-lg);padding:var(--sp-6);text-align:center;
+  color:var(--text-2);font-size:.85rem;
+}
+.empty-state b{display:block;color:var(--text-1);font-size:.95rem;margin-bottom:4px}
+.skeleton{background:linear-gradient(90deg,var(--bg-2) 25%,var(--bg-3) 50%,var(--bg-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--radius-md)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ---------- 8. Match card ---------- */
+.match-card{
+  background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:var(--sp-4);cursor:pointer;transition:.18s var(--ease);position:relative;overflow:hidden;
+}
+.match-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.match-card:focus-visible{border-color:var(--gold)}
+.match-card .mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3);font-size:.68rem;color:var(--text-2)}
+.match-card .mc-comp{text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.mc-teams{display:flex;flex-direction:column;gap:var(--sp-2)}
+.mc-team{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.mc-team-name{display:flex;align-items:center;gap:var(--sp-2);font-weight:600;font-size:.92rem}
+.crest{width:22px;height:22px;border-radius:50%;background:var(--bg-3);object-fit:contain;flex:none}
+.crest-fallback{width:22px;height:22px;border-radius:50%;background:var(--bg-3);display:grid;place-items:center;font-size:.6rem;font-weight:800;color:var(--text-2);flex:none}
+.mc-score{font-family:var(--font-mono);font-weight:700;font-size:1.05rem}
+.mc-team.winner .mc-team-name{color:var(--gold)}
+.mc-team.winner .mc-score{color:var(--gold)}
+.mc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line-soft)}
+.mc-meta{font-size:.7rem;color:var(--text-2)}
+.fav-star{color:var(--text-2);transition:.15s}
+.fav-star.is-fav{color:var(--gold)}
+.fav-star:hover{color:var(--gold)}
+
+/* ---------- 9. Tabs / filtros ---------- */
+.tab-row{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin-bottom:var(--sp-4);overflow-x:auto}
+.tab-btn{padding:var(--sp-2) var(--sp-4);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn.active{color:var(--gold);border-color:var(--gold)}
+.filter-row{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-5)}
+.select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;font-size:.78rem;color:var(--text-0)}
+
+/* ---------- 10. Standings table ---------- */
+.table{width:100%;border-collapse:collapse;font-size:.82rem}
+.table th{text-align:left;padding:8px 10px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2);border-bottom:1px solid var(--line)}
+.table td{padding:9px 10px;border-bottom:1px solid var(--line-soft)}
+.table tr:hover td{background:var(--bg-2)}
+.table .num{font-family:var(--font-mono);text-align:center}
+.table .team-cell{display:flex;align-items:center;gap:var(--sp-2);font-weight:600}
+.pos-badge{width:18px;text-align:center;font-family:var(--font-mono);color:var(--text-2);font-size:.72rem}
+.qualify-line td:first-child{box-shadow:inset 3px 0 0 var(--live)}
+.form-dots{display:flex;gap:3px}
+.form-dot{width:7px;height:7px;border-radius:50%}
+.form-dot.W{background:var(--live)} .form-dot.D{background:var(--text-2)} .form-dot.L{background:var(--red)}
+
+/* ---------- 11. Modal / detalhe de jogo ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(5,7,8,.7);backdrop-filter:blur(3px);z-index:200;
+  display:flex;align-items:flex-start;justify-content:center;padding:var(--sp-6) var(--sp-4);overflow-y:auto;
+  opacity:0;pointer-events:none;transition:opacity .2s var(--ease);
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);max-width:760px;width:100%;
+  box-shadow:var(--shadow-lg);transform:translateY(12px);transition:transform .22s var(--ease);
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-head{padding:var(--sp-5);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-3)}
+.modal-close{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:var(--text-2);flex:none}
+.modal-close:hover{background:var(--bg-2);color:var(--text-0)}
+.modal-body{padding:var(--sp-5)}
+.modal-scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-4);padding:var(--sp-5) 0;text-align:center}
+.modal-team{display:flex;flex-direction:column;align-items:center;gap:var(--sp-2)}
+.modal-team .crest,.modal-team .crest-fallback{width:52px;height:52px;font-size:1rem}
+.modal-team-name{font-weight:700;font-size:.95rem}
+.modal-score-big{font-family:var(--font-mono);font-size:2.6rem;font-weight:800;display:flex;align-items:center;gap:var(--sp-2)}
+.modal-tabs{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin:var(--sp-4) 0}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
+.info-item{background:var(--bg-2);border-radius:var(--radius-md);padding:var(--sp-3)}
+.info-item .lbl{font-size:.62rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.05em;margin-bottom:3px}
+.info-item .val{font-size:.85rem;font-weight:600}
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:var(--sp-4)}
+.tl-event{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--line-soft);font-size:.82rem}
+.tl-min{font-family:var(--font-mono);color:var(--gold);font-weight:700;width:38px;flex:none;text-align:right}
+.tl-icon{width:18px;flex:none;text-align:center}
+
+/* ---------- 12. Predição IA ---------- */
+.predict-card{background:var(--bg-1);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:var(--sp-5);position:relative;overflow:hidden}
+.predict-card::before{content:"IA";position:absolute;top:-6px;right:10px;font-family:var(--font-display);font-size:4.5rem;font-weight:900;color:var(--gold-bg);line-height:1;user-select:none}
+.predict-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)}
+.confidence{display:flex;align-items:center;gap:8px}
+.confidence b{font-family:var(--font-mono);color:var(--gold);font-size:1.1rem}
+.prob-bars{display:flex;flex-direction:column;gap:var(--sp-3);margin-bottom:var(--sp-4)}
+.prob-row{display:grid;grid-template-columns:90px 1fr 48px;align-items:center;gap:var(--sp-3);font-size:.8rem}
+.prob-track{height:8px;background:var(--bg-3);border-radius:6px;overflow:hidden}
+.prob-fill{height:100%;border-radius:6px;transition:width .6s var(--ease-out,ease)}
+.prob-fill.home{background:var(--grad-gold)}
+.prob-fill.draw{background:var(--text-2)}
+.prob-fill.away{background:var(--blue)}
+.predict-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3);margin-bottom:var(--sp-4)}
+.predict-stat{background:var(--bg-2);border-radius:var(--radius-md);padding:var(--sp-3);text-align:center}
+.predict-stat b{display:block;font-family:var(--font-mono);font-size:1.3rem;color:var(--gold)}
+.predict-stat span{font-size:.65rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.04em}
+.factors{display:flex;flex-direction:column;gap:6px}
+.factor{display:flex;justify-content:space-between;font-size:.78rem;padding:7px 10px;background:var(--bg-2);border-radius:var(--radius-sm)}
+.factor .f-name{color:var(--text-1)}
+.factor .f-val{font-family:var(--font-mono);font-weight:700}
+.factor .f-val.pos{color:var(--live)}
+.factor .f-val.neg{color:var(--red)}
+
+/* ---------- 13. Bracket (mata-mata) ---------- */
+.bracket{display:flex;gap:var(--sp-6);overflow-x:auto;padding-bottom:var(--sp-4)}
+.bracket-round{display:flex;flex-direction:column;justify-content:space-around;gap:var(--sp-4);min-width:220px}
+.bracket-round-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);font-weight:700;text-align:center;margin-bottom:var(--sp-2)}
+.bracket-match{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;cursor:pointer;transition:.15s}
+.bracket-match:hover{border-color:var(--gold)}
+.bm-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;font-size:.76rem;gap:6px}
+.bm-row:first-child{border-bottom:1px solid var(--line-soft)}
+.bm-row.win{color:var(--gold);font-weight:700;background:var(--gold-bg)}
+.bm-team{display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bm-score{font-family:var(--font-mono)}
+
+/* ---------- 14. Estatísticas / gráficos ---------- */
+.chart-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4)}
+.chart-card canvas{width:100%;display:block}
+.legend{display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:var(--sp-3);font-size:.72rem;color:var(--text-1)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+/* ---------- 15. Meu Palpite ---------- */
+.guess-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.66rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.04em;font-weight:700}
+.field input,.field select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;font-size:.85rem}
+.field input:focus,.field select:focus{border-color:var(--gold)}
+.score-input{display:flex;align-items:center;gap:var(--sp-2)}
+.score-input input{width:54px;text-align:center;font-family:var(--font-mono);font-size:1.1rem}
+.guess-result{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-3);border-radius:var(--radius-md);margin-top:var(--sp-3);font-size:.82rem}
+.guess-result.hit{background:var(--live-bg);color:var(--live)}
+.guess-result.miss{background:var(--red-bg);color:var(--red)}
+.stat-banner{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--sp-5)}
+.stat-banner .cell{background:var(--bg-1);padding:var(--sp-4);text-align:center}
+.stat-banner .cell b{display:block;font-family:var(--font-mono);font-size:1.7rem;color:var(--gold)}
+.stat-banner .cell span{font-size:.65rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.05em}
+
+/* ---------- 16. Toasts / notificações in-app ---------- */
+.toast-stack{position:fixed;bottom:var(--sp-5);right:var(--sp-5);z-index:300;display:flex;flex-direction:column;gap:var(--sp-2);max-width:320px}
+.toast{
+  background:var(--bg-1);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--radius-md);
+  padding:var(--sp-3) var(--sp-4);box-shadow:var(--shadow-md);font-size:.8rem;
+  animation:toast-in .25s var(--ease);
+}
+.toast.live{border-left-color:var(--live)}
+.toast b{display:block;margin-bottom:2px;font-size:.78rem}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ---------- 17. Setup / API key gate ---------- */
+.setup-card{max-width:520px;margin:var(--sp-7) auto;background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-6)}
+.setup-card h2{font-family:var(--font-display);font-size:1.4rem;text-transform:uppercase;margin-bottom:var(--sp-2)}
+.setup-card p{color:var(--text-1);font-size:.85rem;margin-bottom:var(--sp-4);line-height:1.6}
+.setup-card .field{margin-bottom:var(--sp-3)}
+.setup-card a{color:var(--gold);text-decoration:underline}
+
+/* ---------- 18. Footer ---------- */
+.site-footer{border-top:1px solid var(--line);padding:var(--sp-6) 0;margin-top:auto}
+.site-footer .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);font-size:.75rem;color:var(--text-2)}
+
+/* ---------- 19. Responsivo ---------- */
+@media (max-width:720px){
+  .container{padding:0 var(--sp-4)}
+  .view-title{font-size:1.4rem}
+  .modal-scoreboard{grid-template-columns:1fr;gap:var(--sp-3)}
+  .modal-score-big{justify-content:center}
+  .nav-link{font-size:.66rem}
+  .hero-cell{padding:var(--sp-3)}
+}
+
+/* ---------- 20. Animações utilitárias ---------- */
+.fade-in{animation:fadeIn .35s var(--ease) both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.reveal-stagger > *{animation:fadeIn .4s var(--ease) both}
+.reveal-stagger > *:nth-child(1){animation-delay:.02s} .reveal-stagger > *:nth-child(2){animation-delay:.05s}
+.reveal-stagger > *:nth-child(3){animation-delay:.08s} .reveal-stagger > *:nth-child(4){animation-delay:.11s}
+.reveal-stagger > *:nth-child(5){animation-delay:.14s} .reveal-stagger > *:nth-child(6){animation-delay:.17s}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header">
+    <div class="container">
+      <a href="#/" class="brand"><span class="dot"></span>WORLD<b>CUP</b>·AI</a>
+      <nav class="main-nav" id="mainNav">
+        <a class="nav-link" href="#/" data-route="/">Início</a>
+        <a class="nav-link" href="#/jogos" data-route="/jogos">Jogos</a>
+        <a class="nav-link" href="#/classificacao" data-route="/classificacao">Classificação</a>
+        <a class="nav-link" href="#/mata-mata" data-route="/mata-mata">Mata-mata</a>
+        <a class="nav-link" href="#/estatisticas" data-route="/estatisticas">Estatísticas</a>
+        <a class="nav-link" href="#/palpites" data-route="/palpites">Meus Palpites</a>
+        <a class="nav-link" href="#/favoritos" data-route="/favoritos">Favoritos</a>
+      </nav>
+      <div class="header-actions">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="search" id="searchInput" placeholder="Buscar time, jogo...">
+        </div>
+        <button class="icon-btn" id="notifyBtn" title="Ativar notificações" aria-label="Ativar notificações">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <button class="icon-btn" id="refreshBtn" title="Atualizar tudo" aria-label="Atualizar tudo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <button class="icon-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="Configurar API" aria-label="Configurar API">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== MAIN / ROTAS ===================== -->
+  <main id="appMain" class="container view"></main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <span>WorldCup AI — projeto pessoal, sem fins comerciais. Dados: <a href="https://www.football-data.org" target="_blank" rel="noopener" style="color:var(--gold)">football-data.org</a></span>
+      <span id="apiStatusFoot" class="mono">api: —</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ===================== MODAL (detalhe de jogo) ===================== -->
+<div class="modal-overlay" id="matchModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <div id="modalCompTag" class="chip gold mono" style="margin-bottom:8px"></div>
+        <div id="modalSubtitle" class="view-sub"></div>
+      </div>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL (configurar API key) ===================== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width:480px" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div><div class="view-sub" style="font-weight:700;color:var(--text-0);font-size:1rem">Configurações</div></div>
+      <button class="modal-close" id="settingsCloseBtn" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="apiKeyInput">Chave da API (football-data.org)</label>
+        <input id="apiKeyInput" type="text" placeholder="Cole sua chave gratuita aqui">
+      </div>
+      <p style="font-size:.78rem;color:var(--text-2);margin:6px 0 var(--sp-4)">
+        Crie uma chave gratuita em <a href="https://www.football-data.org/client/register" target="_blank" rel="noopener" style="color:var(--gold)">football-data.org/client/register</a>.
+        O plano free permite 10 requisições por minuto — o app cacheia tudo localmente para economizar chamadas.
+      </p>
+      <div class="field">
+        <label for="compSelect">Competição</label>
+        <select id="compSelect">
+          <option value="WC">Copa do Mundo FIFA (WC)</option>
+          <option value="CL">Champions League (CL)</option>
+          <option value="EC">Eurocopa (EC)</option>
+          <option value="PL">Premier League (PL)</option>
+          <option value="BL1">Bundesliga (BL1)</option>
+          <option value="SA">Serie A (SA)</option>
+          <option value="PD">La Liga (PD)</option>
+          <option value="BSA">Brasileirão (BSA)</option>
+        </select>
+      </div>
+      <button class="btn btn-gold" id="saveSettingsBtn" style="width:100%;justify-content:center;margin-top:var(--sp-2)">Salvar e carregar dados</button>
+      <div id="settingsMsg" style="font-size:.76rem;color:var(--text-2);margin-top:var(--sp-3)"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* =====================================================================
+   WORLDCUP AI — JAVASCRIPT
+   Organizado em módulos via IIFE (sem build step, sem frameworks).
+   Módulos: Utils, Store, Api, Theme, Toast, Favorites, Guesses,
+            Notify, Predict, Charts, Router, Views, App
+   ===================================================================== */
+(function(){
+"use strict";
+
+/* ----------------------------------------------------------------
+   1. UTILS — funções puras de apoio
+   ---------------------------------------------------------------- */
+const Utils = (function(){
+  function $(sel, ctx){ return (ctx||document).querySelector(sel); }
+  function $all(sel, ctx){ return Array.from((ctx||document).querySelectorAll(sel)); }
+  function el(tag, attrs, children){
+    const node = document.createElement(tag);
+    if(attrs) for(const k in attrs){
+      if(k === "class") node.className = attrs[k];
+      else if(k === "html") node.innerHTML = attrs[k];
+      else if(k.startsWith("on") && typeof attrs[k] === "function") node.addEventListener(k.slice(2), attrs[k]);
+      else node.setAttribute(k, attrs[k]);
+    }
+    (children||[]).forEach(c => { if(c) node.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return node;
+  }
+  function fmtDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
+  }
+  function fmtTime(iso){
+    const d = new Date(iso);
+    return d.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+  }
+  function fmtDateTime(iso){ return fmtDate(iso) + " · " + fmtTime(iso); }
+  function timeAgo(iso){
+    const diff = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(diff/60000);
+    if(min < 1) return "agora";
+    if(min < 60) return min + " min atrás";
+    const h = Math.floor(min/60);
+    if(h < 24) return h + "h atrás";
+    return Math.floor(h/24) + "d atrás";
+  }
+  function initials(name){
+    if(!name) return "??";
+    return name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+  }
+  function crestImg(team, size){
+    size = size || 22;
+    if(team && team.crest){
+      const img = el("img", { class:"crest", src:team.crest, alt:(team.shortName||team.name||"") , loading:"lazy" });
+      img.style.width = size+"px"; img.style.height = size+"px";
+      img.onerror = function(){ this.replaceWith(el("div", { class:"crest-fallback" }, [initials(team.shortName||team.name)])); };
+      return img;
+    }
+    const f = el("div", { class:"crest-fallback" }, [initials(team && (team.shortName||team.name))]);
+    f.style.width = size+"px"; f.style.height = size+"px";
+    return f;
+  }
+  function statusLabel(s){
+    return ({
+      SCHEDULED:"Agendado", TIMED:"Agendado", IN_PLAY:"Ao vivo", PAUSED:"Intervalo",
+      FINISHED:"Encerrado", POSTPONED:"Adiado", SUSPENDED:"Suspenso", CANCELLED:"Cancelado", AWARDED:"Decidido"
+    })[s] || s;
+  }
+  function stageLabel(s){
+    return ({
+      GROUP_STAGE:"Fase de grupos", LAST_16:"Oitavas de final", ROUND_OF_16:"Oitavas de final",
+      QUARTER_FINALS:"Quartas de final", SEMI_FINALS:"Semifinal", THIRD_PLACE:"Disputa de 3º lugar",
+      FINAL:"Final", PRELIMINARY_ROUND:"Rodada preliminar", PLAYOFFS:"Playoffs"
+    })[s] || (s||"").replaceAll("_"," ");
+  }
+  function debounce(fn, ms){
+    let t; return function(...a){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,a), ms); };
+  }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  return { $, $all, el, fmtDate, fmtTime, fmtDateTime, timeAgo, initials, crestImg, statusLabel, stageLabel, debounce, clamp, uid };
+})();
+
+/* ----------------------------------------------------------------
+   2. STORE — persistência local (config, cache com TTL, etc.)
+   ---------------------------------------------------------------- */
+const Store = (function(){
+  const NS = "wcai:";
+  function get(key, fallback){
+    try{ const v = localStorage.getItem(NS+key); return v === null ? fallback : JSON.parse(v); }
+    catch(e){ return fallback; }
+  }
+  function set(key, val){ try{ localStorage.setItem(NS+key, JSON.stringify(val)); }catch(e){} }
+  function remove(key){ localStorage.removeItem(NS+key); }
+
+  // cache com TTL (reduz chamadas — plano free = 10 req/min)
+  function cacheGet(key){
+    const entry = get("cache:"+key, null);
+    if(!entry) return null;
+    if(Date.now() > entry.exp) return null;
+    return entry.data;
+  }
+  function cacheSet(key, data, ttlMs){
+    set("cache:"+key, { data, exp: Date.now() + ttlMs });
+  }
+  return { get, set, remove, cacheGet, cacheSet };
+})();
+
+/* ----------------------------------------------------------------
+   3. API — camada de acesso à football-data.org (v4)
+   ---------------------------------------------------------------- */
+const Api = (function(){
+  const BASE = "https://api.football-data.org/v4";
+  // chave padrão embutida, pra abrir e já funcionar sem precisar configurar nada.
+  // Pode ser sobrescrita em Configurações (ícone de engrenagem) por qualquer pessoa
+  // que queira usar a própria chave — útil se muita gente acessar ao mesmo tempo,
+  // já que o limite de requisições por minuto é compartilhado entre quem usa essa chave.
+  const DEFAULT_API_KEY = "8784fc6c802e4116b6229330f88405da";
+  let queue = [];
+  let processing = false;
+  const FALLBACK_GAP = 6200; // só usado antes de recebermos o 1º header real da API
+
+  // throttling adaptativo: lido a cada resposta dos headers reais da API
+  // (X-Requests-Available-Minute / X-RequestCounter-Reset), conforme orientação
+  // da própria football-data.org — evita chute fixo e se adapta ao plano do usuário.
+  let remainingThisMinute = null;
+  let resetInSeconds = null;
+
+  function getKey(){ return Store.get("apiKey", null) || DEFAULT_API_KEY; }
+  function getComp(){ return Store.get("competition", "WC"); }
+
+  function enqueue(path){
+    return new Promise((resolve, reject) => {
+      queue.push({ path, resolve, reject });
+      processQueue();
+    });
+  }
+
+  function nextGapMs(){
+    // se a API já nos disse quantas requisições sobram nesse minuto, usamos isso
+    // pra espaçar o que falta até o reset; senão caímos no intervalo de segurança.
+    if(remainingThisMinute != null && resetInSeconds != null){
+      if(remainingThisMinute <= 1) return Math.max(1000, resetInSeconds * 1000 + 250);
+      return Math.max(300, (resetInSeconds * 1000) / Math.max(1, remainingThisMinute));
+    }
+    return FALLBACK_GAP;
+  }
+
+  function processQueue(){
+    if(processing || queue.length === 0) return;
+    processing = true;
+    const job = queue.shift();
+    doFetch(job.path).then(job.resolve).catch(job.reject).finally(() => {
+      setTimeout(() => { processing = false; processQueue(); }, nextGapMs());
+    });
+  }
+
+  // A API da football-data.org atualmente só libera CORS para a origem exata
+  // "http://localhost" (sem porta) — bloqueia 127.0.0.1, Live Server, GitHub Pages etc.
+  // Para continuar 100% estático (sem backend), roteamos pelo corsproxy.io, que já
+  // libera de graça origens como localhost, 127.0.0.1 e *.github.io e repassa os
+  // headers (incluindo X-Auth-Token) pro destino real.
+  function buildUrl(path){
+    const real = BASE + path;
+    return "https://corsproxy.io/?url=" + encodeURIComponent(real);
+  }
+
+  async function doFetch(path){
+    const key = getKey();
+    if(!key) throw { code: "NO_KEY", message: "Configure sua chave da API em Configurações." };
+    setApiStatus("consultando…");
+    try{
+      const res = await fetch(buildUrl(path), { headers: { "X-Auth-Token": key } });
+      readThrottleHeaders(res);
+      if(res.status === 429){
+        const retryAfter = Number(res.headers.get("Retry-After")) || resetInSeconds || 60;
+        setApiStatus("limite atingido — aguardando "+retryAfter+"s");
+        throw { code:"RATE_LIMIT", message:"Limite de requisições por minuto atingido. Aguardando "+retryAfter+"s antes de tentar de novo." };
+      }
+      if(res.status === 403){ setApiStatus("acesso negado"); throw { code:"FORBIDDEN", message:"Esse recurso não está disponível no seu plano da API." }; }
+      if(res.status === 400){ setApiStatus("erro"); throw { code:"BAD_REQUEST", message:"Requisição inválida para esse recurso." }; }
+      if(!res.ok){ setApiStatus("offline"); throw { code:"HTTP_"+res.status, message:"Erro ao consultar a API (HTTP "+res.status+")." }; }
+      setApiStatus("online" + (remainingThisMinute!=null ? " · "+remainingThisMinute+" req/min restantes" : ""));
+      return await res.json();
+    }catch(err){
+      if(err && err.code) throw err;
+      setApiStatus("offline");
+      throw { code:"NETWORK", message:"Falha de rede ou CORS ao consultar a API. Verifique sua chave e conexão." };
+    }
+  }
+
+  // lê os headers reais de throttling que a football-data.org devolve em toda resposta,
+  // pra adaptar o ritmo das próximas chamadas em vez de usar um intervalo fixo no chute.
+  function readThrottleHeaders(res){
+    const avail = res.headers.get("X-Requests-Available-Minute");
+    const reset = res.headers.get("X-RequestCounter-Reset");
+    if(avail !== null) remainingThisMinute = Number(avail);
+    if(reset !== null) resetInSeconds = Number(reset);
+  }
+
+  function setApiStatus(s){
+    const node = document.getElementById("apiStatusFoot");
+    if(node) node.textContent = "api: " + s;
+  }
+
+  // get com cache. ttlMs default 60s para dados "vivos", maior para dados estáveis.
+  async function get(path, ttlMs){
+    ttlMs = ttlMs == null ? 60000 : ttlMs;
+    const cached = Store.cacheGet(path);
+    if(cached) return cached;
+    const data = await enqueue(path);
+    Store.cacheSet(path, data, ttlMs);
+    return data;
+  }
+
+  function invalidate(prefix){
+    // limpa cache cujo path comece com prefix (força refresh manual)
+    const ks = Object.keys(localStorage);
+    ks.forEach(k => { if(k.startsWith("wcai:cache:"+prefix)) localStorage.removeItem(k); });
+  }
+
+  return {
+    matches: (comp, params) => get(`/competitions/${comp}/matches${params||""}`, 45000),
+    matchesLive: (comp) => get(`/competitions/${comp}/matches?status=LIVE`, 20000),
+    matchDetail: (id) => get(`/matches/${id}`, 20000),
+    standings: (comp) => get(`/competitions/${comp}/standings`, 120000),
+    teams: (comp) => get(`/competitions/${comp}/teams`, 600000),
+    team: (id) => get(`/teams/${id}`, 600000),
+    teamMatches: (id, params) => get(`/teams/${id}/matches${params||""}`, 300000),
+    scorers: (comp) => get(`/competitions/${comp}/scorers?limit=25`, 300000),
+    competition: (comp) => get(`/competitions/${comp}`, 600000),
+    invalidate, getKey, getComp,
+  };
+})();
+
+/* ----------------------------------------------------------------
+   4. THEME — claro/escuro
+   ---------------------------------------------------------------- */
+const Theme = (function(){
+  function init(){
+    const saved = Store.get("theme", "dark");
+    document.documentElement.setAttribute("data-theme", saved);
+  }
+  function toggle(){
+    const cur = document.documentElement.getAttribute("data-theme");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    Store.set("theme", next);
+  }
+  return { init, toggle };
+})();
+
+/* ----------------------------------------------------------------
+   5. TOAST — avisos in-app (espelha notificações nativas)
+   ---------------------------------------------------------------- */
+const Toast = (function(){
+  function show(title, msg, opts){
+    opts = opts || {};
+    const stack = document.getElementById("toastStack");
+    const t = Utils.el("div", { class: "toast" + (opts.live ? " live" : "") }, [
+      Utils.el("b", {}, [title]),
+      Utils.el("div", { style:"color:var(--text-1)" }, [msg||""])
+    ]);
+    stack.appendChild(t);
+    setTimeout(() => { t.style.transition = "opacity .3s, transform .3s"; t.style.opacity = "0"; t.style.transform = "translateX(20px)"; setTimeout(()=>t.remove(), 320); }, opts.duration || 5000);
+  }
+  return { show };
+})();
+
+/* ----------------------------------------------------------------
+   6. FAVORITES — times, jogadores e jogos favoritos
+   ---------------------------------------------------------------- */
+const Favorites = (function(){
+  function getAll(){ return Store.get("favorites", { teams:[], matches:[] }); }
+  function isFavTeam(id){ return getAll().teams.includes(id); }
+  function isFavMatch(id){ return getAll().matches.includes(id); }
+  function toggleTeam(id){
+    const f = getAll(); const i = f.teams.indexOf(id);
+    if(i>=0) f.teams.splice(i,1); else f.teams.push(id);
+    Store.set("favorites", f); return f.teams.includes(id);
+  }
+  function toggleMatch(id){
+    const f = getAll(); const i = f.matches.indexOf(id);
+    if(i>=0) f.matches.splice(i,1); else f.matches.push(id);
+    Store.set("favorites", f); return f.matches.includes(id);
+  }
+  return { getAll, isFavTeam, isFavMatch, toggleTeam, toggleMatch };
+})();
+
+/* ----------------------------------------------------------------
+   7. GUESSES — "Meu Palpite" (sem dinheiro, só pra brincar)
+   ---------------------------------------------------------------- */
+const Guesses = (function(){
+  function all(){ return Store.get("guesses", {}); }
+  function save(matchId, guess){
+    const g = all(); g[matchId] = Object.assign({}, guess, { savedAt: Date.now(), checked:false });
+    Store.set("guesses", g);
+  }
+  function get(matchId){ return all()[matchId] || null; }
+  function remove(matchId){ const g = all(); delete g[matchId]; Store.set("guesses", g); }
+
+  // compara palpite com resultado real após o jogo terminar
+  function evaluate(matchId, match){
+    const g = get(matchId);
+    if(!g || g.checked) return g;
+    if(match.status !== "FINISHED") return g;
+    const realHome = match.score.fullTime.home, realAway = match.score.fullTime.away;
+    const hits = {};
+    hits.placarExato = (Number(g.home) === realHome && Number(g.away) === realAway);
+    const realResult = realHome > realAway ? "HOME" : (realHome < realAway ? "AWAY" : "DRAW");
+    const guessResult = Number(g.home) > Number(g.away) ? "HOME" : (Number(g.home) < Number(g.away) ? "AWAY" : "DRAW");
+    hits.vencedor = realResult === guessResult;
+    const totalGoals = realHome + realAway;
+    if(g.corners !== undefined && g.corners !== "") hits.escanteios = null; // API free não fornece escanteios reais — marcado como não verificável
+    let score = 0, possible = 1;
+    if(hits.placarExato) score += 2; possible += 1; // placar vale mais
+    if(hits.vencedor) score += 1;
+    g.checked = true; g.hits = hits; g.points = score; g.possible = possible + 1;
+    const all_ = all(); all_[matchId] = g; Store.set("guesses", all_);
+    updateStreak(hits.vencedor);
+    return g;
+  }
+
+  function updateStreak(hit){
+    const s = Store.get("streak", { current:0, best:0 });
+    if(hit){ s.current += 1; s.best = Math.max(s.best, s.current); } else { s.current = 0; }
+    Store.set("streak", s);
+  }
+
+  function stats(){
+    const g = all();
+    const checked = Object.values(g).filter(x => x.checked);
+    const correct = checked.filter(x => x.hits && x.hits.vencedor).length;
+    const exact = checked.filter(x => x.hits && x.hits.placarExato).length;
+    const pct = checked.length ? Math.round((correct/checked.length)*100) : 0;
+    const streak = Store.get("streak", { current:0, best:0 });
+    return { total: Object.keys(g).length, checked: checked.length, correct, exact, pct, streak };
+  }
+
+  return { all, save, get, remove, evaluate, stats };
+})();
+
+/* ----------------------------------------------------------------
+   8. NOTIFY — notificações nativas do navegador
+   ---------------------------------------------------------------- */
+const Notify = (function(){
+  let permissionAsked = false;
+  let pollTimer = null;
+  let knownState = Store.get("matchStates", {}); // matchId -> { status, homeScore, awayScore }
+
+  function updateBtn(){
+    const btn = document.getElementById("notifyBtn");
+    if(!btn) return;
+    const granted = "Notification" in window && Notification.permission === "granted";
+    btn.classList.toggle("is-active", granted);
+  }
+
+  async function requestPermission(){
+    if(!("Notification" in window)){ Toast.show("Indisponível", "Seu navegador não suporta notificações."); return; }
+    if(Notification.permission === "default" && !permissionAsked){
+      permissionAsked = true;
+      const perm = await Notification.requestPermission();
+      if(perm === "granted") Toast.show("Notificações ativadas", "Você será avisado sobre os jogos.");
+    } else if(Notification.permission === "denied"){
+      Toast.show("Bloqueado", "Notificações foram bloqueadas nas configurações do navegador.");
+    }
+    updateBtn();
+  }
+
+  function fire(title, body, opts){
+    Toast.show(title, body, opts);
+    if("Notification" in window && Notification.permission === "granted"){
+      try{ new Notification(title, { body, icon: "" }); }catch(e){}
+    }
+  }
+
+  function diffAndNotify(matches){
+    const favs = Favorites.getAll().teams;
+    matches.forEach(m => {
+      const prev = knownState[m.id];
+      const curHome = m.score.fullTime.home, curAway = m.score.fullTime.away;
+      const involvesFav = favs.includes(m.homeTeam.id) || favs.includes(m.awayTeam.id);
+      if(!prev){
+        knownState[m.id] = { status:m.status, home:curHome, away:curAway };
+        return;
+      }
+      if(prev.status !== "IN_PLAY" && m.status === "IN_PLAY"){
+        fire("⚽ Começou!", `${m.homeTeam.shortName||m.homeTeam.name} x ${m.awayTeam.shortName||m.awayTeam.name}`, { live:true });
+        if(involvesFav) fire("⭐ Seu time entrou em campo", `${m.homeTeam.shortName} x ${m.awayTeam.shortName}`, { live:true });
+      }
+      if(prev.status !== "PAUSED" && m.status === "PAUSED"){
+        fire("⏸ Intervalo", `${m.homeTeam.shortName} ${curHome} x ${curAway} ${m.awayTeam.shortName}`);
+      }
+      if(prev.status === "PAUSED" && m.status === "IN_PLAY"){
+        fire("▶ Segundo tempo", `${m.homeTeam.shortName} x ${m.awayTeam.shortName} recomeçou`, { live:true });
+      }
+      if((prev.home !== curHome || prev.away !== curAway) && (curHome!==null && curAway!==null)){
+        fire("⚽ GOL!", `${m.homeTeam.shortName} ${curHome} x ${curAway} ${m.awayTeam.shortName}`, { live:true });
+      }
+      if(prev.status !== "FINISHED" && m.status === "FINISHED"){
+        fire("🏁 Fim de jogo", `${m.homeTeam.shortName} ${curHome} x ${curAway} ${m.awayTeam.shortName}`);
+      }
+      knownState[m.id] = { status:m.status, home:curHome, away:curAway };
+    });
+    Store.set("matchStates", knownState);
+  }
+
+  function startPolling(getMatchesFn){
+    stopPolling();
+    pollTimer = setInterval(async () => {
+      if(document.hidden) return;
+      try{ const ms = await getMatchesFn(); diffAndNotify(ms); }catch(e){}
+    }, 60000);
+  }
+  function stopPolling(){ if(pollTimer) clearInterval(pollTimer); }
+
+  return { requestPermission, updateBtn, diffAndNotify, startPolling, stopPolling };
+})();
+
+/* ----------------------------------------------------------------
+   9. PREDICT — motor de previsão (estatístico, não-ML)
+   Baseado em: forma recente, média de gols, mando de campo,
+   saldo de gols e posição na tabela (quando disponível).
+   Usa aproximação de Poisson para distribuição de placares.
+   ---------------------------------------------------------------- */
+const Predict = (function(){
+
+  function poisson(lambda, k){
+    return (Math.pow(lambda,k) * Math.exp(-lambda)) / factorial(k);
+  }
+  function factorial(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+
+  // calcula "força" de ataque/defesa a partir do histórico de partidas finalizadas de um time
+  function teamForm(teamId, finishedMatches){
+    const played = finishedMatches.filter(m => m.status === "FINISHED" && (m.homeTeam.id===teamId || m.awayTeam.id===teamId));
+    if(played.length === 0) return null;
+    let gf=0, ga=0, w=0,d=0,l=0;
+    const formSeq = [];
+    played.slice(-6).forEach(m => {
+      const isHome = m.homeTeam.id === teamId;
+      const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+      const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
+      gf += my; ga += opp;
+      if(my>opp){ w++; formSeq.push("W"); } else if(my<opp){ l++; formSeq.push("L"); } else { d++; formSeq.push("D"); }
+    });
+    const n = played.slice(-6).length;
+    return { gfAvg: gf/n, gaAvg: ga/n, w,d,l, n, formSeq, winRate: w/n };
+  }
+
+  // gera previsão completa para um confronto
+  function predictMatch(home, away, ctx){
+    ctx = ctx || {};
+    const homeForm = teamForm(home.id, ctx.matches||[]);
+    const awayForm = teamForm(away.id, ctx.matches||[]);
+
+    // baseline da competição (média histórica ~2.6 gols/jogo em Copas)
+    const BASE = 1.35;
+    const HOME_ADV = 1.12;
+
+    let lambdaHome = BASE * HOME_ADV;
+    let lambdaAway = BASE;
+
+    if(homeForm) lambdaHome = (homeForm.gfAvg*0.65 + (awayForm? awayForm.gaAvg*0.35 : BASE*0.35)) * HOME_ADV;
+    if(awayForm) lambdaAway = (awayForm.gfAvg*0.65 + (homeForm? homeForm.gaAvg*0.35 : BASE*0.35));
+
+    // ajuste por posição na tabela, se disponível
+    if(ctx.standings){
+      const hPos = findPosition(ctx.standings, home.id);
+      const aPos = findPosition(ctx.standings, away.id);
+      if(hPos && aPos){
+        const diff = (aPos - hPos) / 16; // normalizado
+        lambdaHome *= Utils.clamp(1 + diff*0.18, 0.6, 1.6);
+        lambdaAway *= Utils.clamp(1 - diff*0.18, 0.6, 1.6);
+      }
+    }
+    lambdaHome = Utils.clamp(lambdaHome, 0.25, 4.5);
+    lambdaAway = Utils.clamp(lambdaAway, 0.25, 4.5);
+
+    // matriz de placares via Poisson (0..6 gols)
+    const MAXG = 6;
+    let grid = [];
+    let pHome=0, pDraw=0, pAway=0, pBTTS=0, pOver25=0;
+    let best = { h:0,a:0,p:0 };
+    for(let h=0; h<=MAXG; h++){
+      grid[h] = [];
+      for(let a=0; a<=MAXG; a++){
+        const p = poisson(lambdaHome,h) * poisson(lambdaAway,a);
+        grid[h][a] = p;
+        if(h>a) pHome += p; else if(h<a) pAway += p; else pDraw += p;
+        if(h>0 && a>0) pBTTS += p;
+        if(h+a > 2) pOver25 += p;
+        if(p > best.p) best = { h,a,p };
+      }
+    }
+    const total = pHome+pDraw+pAway;
+    pHome/=total; pDraw/=total; pAway/=total;
+
+    // nível de confiança = função da quantidade de dados disponíveis
+    let dataPoints = (homeForm?homeForm.n:0) + (awayForm?awayForm.n:0);
+    let confidence = Utils.clamp(40 + dataPoints*5, 35, 92);
+    if(ctx.standings) confidence = Utils.clamp(confidence + 6, 35, 95);
+
+    const factors = [];
+    if(homeForm) factors.push({ name: `Forma recente de ${home.shortName||home.name}`, val: (homeForm.winRate*100).toFixed(0)+"% vitórias", positive: homeForm.winRate>=0.5 });
+    if(awayForm) factors.push({ name: `Forma recente de ${away.shortName||away.name}`, val: (awayForm.winRate*100).toFixed(0)+"% vitórias", positive: awayForm.winRate>=0.5 });
+    factors.push({ name:"Mando de campo", val:"+"+Math.round((HOME_ADV-1)*100)+"% ataque", positive:true });
+    if(homeForm) factors.push({ name:`Média de gols (${home.shortName||home.name})`, val: homeForm.gfAvg.toFixed(2)+"/jogo", positive: homeForm.gfAvg>=1.3 });
+    if(awayForm) factors.push({ name:`Média de gols (${away.shortName||away.name})`, val: awayForm.gfAvg.toFixed(2)+"/jogo", positive: awayForm.gfAvg>=1.3 });
+    if(!homeForm && !awayForm) factors.push({ name:"Histórico", val:"dados insuficientes — usando médias gerais", positive:false });
+
+    return {
+      pHome, pDraw, pAway, pBTTS, pOver25, pUnder25: 1-pOver25,
+      expHome: lambdaHome, expAway: lambdaAway,
+      bestScore: best, confidence: Math.round(confidence), factors,
+    };
+  }
+
+  function findPosition(standingsResp, teamId){
+    if(!standingsResp || !standingsResp.standings) return null;
+    for(const table of standingsResp.standings){
+      if(table.type !== "TOTAL") continue;
+      const row = table.table.find(r => r.team.id === teamId);
+      if(row) return row.position;
+    }
+    return null;
+  }
+
+  return { predictMatch, teamForm };
+})();
+
+/* ----------------------------------------------------------------
+   10. CHARTS — gráficos em <canvas> puro (sem libs externas)
+   ---------------------------------------------------------------- */
+const Charts = (function(){
+  function setupCanvas(canvas){
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * ratio;
+    canvas.height = (canvas.dataset.h ? Number(canvas.dataset.h) : 220) * ratio;
+    canvas.style.height = (canvas.dataset.h ? Number(canvas.dataset.h) : 220) + "px";
+    const ctx = canvas.getContext("2d");
+    ctx.scale(ratio, ratio);
+    return { ctx, w: rect.width, h: canvas.dataset.h ? Number(canvas.dataset.h) : 220 };
+  }
+  function colorVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function barChart(canvas, labels, values, opts){
+    opts = opts || {};
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    const pad = { l:34, r:10, t:14, b:26 };
+    const max = Math.max(1, ...values) * 1.15;
+    const bw = (w - pad.l - pad.r) / values.length;
+    ctx.strokeStyle = colorVar("--line"); ctx.lineWidth = 1;
+    for(let i=0;i<=4;i++){
+      const y = pad.t + (h-pad.t-pad.b) * (i/4);
+      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+      ctx.fillStyle = colorVar("--text-2"); ctx.font = "10px var(--font-mono)";
+      ctx.textAlign = "right";
+      ctx.fillText(Math.round(max*(1-i/4)), pad.l-6, y+3);
+    }
+    values.forEach((v,i) => {
+      const bh = (h-pad.t-pad.b) * (v/max);
+      const x = pad.l + i*bw + bw*0.18;
+      const y = h - pad.b - bh;
+      const grad = ctx.createLinearGradient(0,y,0,h-pad.b);
+      grad.addColorStop(0, opts.color || colorVar("--gold"));
+      grad.addColorStop(1, colorVar("--bg-2"));
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, bw*0.64, bh);
+      ctx.fillStyle = colorVar("--text-1"); ctx.font = "10px var(--font-body)"; ctx.textAlign = "center";
+      ctx.fillText(labels[i], x+bw*0.32, h-8);
+      ctx.fillStyle = colorVar("--text-0"); ctx.font = "700 10px var(--font-mono)";
+      ctx.fillText(String(v), x+bw*0.32, y-5);
+    });
+  }
+
+  function lineChart(canvas, labels, series, opts){
+    opts = opts || {};
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    const pad = { l:30, r:14, t:16, b:24 };
+    const allVals = series.flatMap(s=>s.data);
+    const max = Math.max(1,...allVals)*1.15, min = Math.min(0,...allVals);
+    ctx.strokeStyle = colorVar("--line");
+    for(let i=0;i<=4;i++){
+      const y = pad.t + (h-pad.t-pad.b)*(i/4);
+      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+    }
+    series.forEach(s => {
+      ctx.beginPath(); ctx.strokeStyle = s.color || colorVar("--gold"); ctx.lineWidth = 2;
+      s.data.forEach((v,i) => {
+        const x = pad.l + (w-pad.l-pad.r)*(i/(s.data.length-1||1));
+        const y = h - pad.b - (h-pad.t-pad.b)*((v-min)/(max-min||1));
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+      s.data.forEach((v,i) => {
+        const x = pad.l + (w-pad.l-pad.r)*(i/(s.data.length-1||1));
+        const y = h - pad.b - (h-pad.t-pad.b)*((v-min)/(max-min||1));
+        ctx.beginPath(); ctx.fillStyle = s.color || colorVar("--gold"); ctx.arc(x,y,2.6,0,7); ctx.fill();
+      });
+    });
+    ctx.fillStyle = colorVar("--text-2"); ctx.font = "9px var(--font-body)"; ctx.textAlign = "center";
+    labels.forEach((l,i) => {
+      if(labels.length > 12 && i % Math.ceil(labels.length/12) !== 0) return;
+      const x = pad.l + (w-pad.l-pad.r)*(i/(labels.length-1||1));
+      ctx.fillText(l, x, h-6);
+    });
+  }
+
+  function donutChart(canvas, segments){ // [{label,value,color}]
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 10, rIn = r*0.62;
+    const total = segments.reduce((s,x)=>s+x.value,0) || 1;
+    let start = -Math.PI/2;
+    segments.forEach(seg => {
+      const angle = (seg.value/total) * Math.PI*2;
+      ctx.beginPath();
+      ctx.arc(cx,cy,r,start,start+angle);
+      ctx.arc(cx,cy,rIn,start+angle,start,true);
+      ctx.closePath();
+      ctx.fillStyle = seg.color;
+      ctx.fill();
+      start += angle;
+    });
+    ctx.fillStyle = colorVar("--text-0"); ctx.font = "700 16px var(--font-mono)"; ctx.textAlign = "center"; ctx.textBaseline="middle";
+    ctx.fillText(Math.round((segments[0].value/total)*100)+"%", cx, cy);
+  }
+
+  function radarChart(canvas, labels, series){ // series: [{label,data:[0..1],color}]
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 28;
+    const n = labels.length;
+    ctx.strokeStyle = colorVar("--line"); ctx.fillStyle = colorVar("--text-2"); ctx.font = "9px var(--font-body)";
+    for(let ring=1; ring<=4; ring++){
+      ctx.beginPath();
+      for(let i=0;i<=n;i++){
+        const a = -Math.PI/2 + (i%n)*(Math.PI*2/n);
+        const rr = r*(ring/4);
+        const x = cx+Math.cos(a)*rr, y = cy+Math.sin(a)*rr;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    labels.forEach((l,i) => {
+      const a = -Math.PI/2 + i*(Math.PI*2/n);
+      const x = cx+Math.cos(a)*(r+14), y = cy+Math.sin(a)*(r+14);
+      ctx.textAlign = "center";
+      ctx.fillText(l, x, y);
+    });
+    series.forEach(s => {
+      ctx.beginPath();
+      s.data.forEach((v,i) => {
+        const a = -Math.PI/2 + i*(Math.PI*2/n);
+        const rr = r*Utils.clamp(v,0,1);
+        const x = cx+Math.cos(a)*rr, y = cy+Math.sin(a)*rr;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = s.color.replace(")", ",0.18)").replace("rgb","rgba");
+      ctx.strokeStyle = s.color; ctx.lineWidth = 2;
+      ctx.fill(); ctx.stroke();
+    });
+  }
+
+  return { barChart, lineChart, donutChart, radarChart };
+})();
+
+/* ----------------------------------------------------------------
+   11. ROUTER — hash router simples
+   ---------------------------------------------------------------- */
+const Router = (function(){
+  const routes = {};
+  function on(path, handler){ routes[path] = handler; }
+  function resolve(){
+    const hash = location.hash.replace(/^#/, "") || "/";
+    const [pathPart] = hash.split("?");
+    const segs = pathPart.split("/").filter(Boolean);
+    Utils.$all(".nav-link").forEach(a => a.classList.toggle("active", a.dataset.route === "/"+ (segs[0]||"")));
+
+    if(segs.length === 0) return routes["/"]();
+    if(segs[0] === "jogos" && !segs[1]) return routes["/jogos"]();
+    if(segs[0] === "jogos" && segs[1] === "match" && segs[2]) return routes["/jogos/match"](segs[2]);
+    if(segs[0] === "classificacao") return routes["/classificacao"]();
+    if(segs[0] === "mata-mata") return routes["/mata-mata"]();
+    if(segs[0] === "estatisticas") return routes["/estatisticas"]();
+    if(segs[0] === "palpites") return routes["/palpites"]();
+    if(segs[0] === "favoritos") return routes["/favoritos"]();
+    if(segs[0] === "time" && segs[1]) return routes["/time"](segs[1]);
+    if(segs[0] === "busca") return routes["/busca"]();
+    return routes["/"]();
+  }
+  function init(){
+    window.addEventListener("hashchange", resolve);
+    resolve();
+  }
+  return { on, init, resolve };
+})();
+
+/* ----------------------------------------------------------------
+   12. VIEWS — construção das telas
+   ---------------------------------------------------------------- */
+const Views = (function(){
+  const main = () => document.getElementById("appMain");
+
+  function loadingBlock(n){
+    const wrap = Utils.el("div", { class:"grid grid-3" });
+    for(let i=0;i<(n||6);i++){
+      const s = Utils.el("div", { class:"skeleton" });
+      s.style.height = "120px";
+      wrap.appendChild(s);
+    }
+    return wrap;
+  }
+
+  function noKeyState(){
+    return Utils.el("div", { class:"setup-card fade-in" }, [
+      Utils.el("h2", {}, ["Vamos configurar"]),
+      Utils.el("p", {}, ["Para acompanhar a Copa em tempo real, conecte sua chave gratuita da football-data.org. Leva 1 minuto e fica salva só no seu navegador."]),
+      (() => {
+        const b = Utils.el("button", { class:"btn btn-gold", style:"width:100%;justify-content:center" }, ["Configurar agora"]);
+        b.onclick = () => openSettings();
+        return b;
+      })()
+    ]);
+  }
+
+  function errorState(err, retryFn){
+    const box = Utils.el("div", { class:"empty-state fade-in" }, [
+      Utils.el("b", {}, ["Não foi possível carregar"]),
+      Utils.el("div", {}, [(err && err.message) || "Erro desconhecido."]),
+    ]);
+    if(retryFn){
+      const b = Utils.el("button", { class:"btn btn-sm", style:"margin-top:12px" }, ["Tentar novamente"]);
+      b.onclick = retryFn;
+      box.appendChild(b);
+    }
+    return box;
+  }
+
+  /* ---------- match card ---------- */
+  function matchCard(m){
+    const isLive = m.status === "IN_PLAY" || m.status === "PAUSED";
+    const card = Utils.el("div", { class:"match-card fade-in", tabindex:"0", role:"button" });
+    card.onclick = () => location.hash = "#/jogos/match/" + m.id;
+    card.onkeydown = (e) => { if(e.key==="Enter") card.onclick(); };
+
+    const top = Utils.el("div", { class:"mc-top" }, [
+      Utils.el("span", { class:"mc-comp" }, [Utils.stageLabel(m.stage) + (m.group ? " · "+m.group.replace("GROUP_","Grupo ") : "")]),
+      statusChip(m)
+    ]);
+
+    const homeWin = m.status==="FINISHED" && m.score.winner==="HOME_TEAM";
+    const awayWin = m.status==="FINISHED" && m.score.winner==="AWAY_TEAM";
+    const teams = Utils.el("div", { class:"mc-teams" }, [
+      Utils.el("div", { class:"mc-team"+(homeWin?" winner":"") }, [
+        Utils.el("div", { class:"mc-team-name" }, [Utils.crestImg(m.homeTeam), m.homeTeam.shortName||m.homeTeam.name||"A definir"]),
+        Utils.el("div", { class:"mc-score" }, [scoreOrTime(m,"home")])
+      ]),
+      Utils.el("div", { class:"mc-team"+(awayWin?" winner":"") }, [
+        Utils.el("div", { class:"mc-team-name" }, [Utils.crestImg(m.awayTeam), m.awayTeam.shortName||m.awayTeam.name||"A definir"]),
+        Utils.el("div", { class:"mc-score" }, [scoreOrTime(m,"away")])
+      ]),
+    ]);
+
+    const star = Utils.el("button", { class:"fav-star"+(Favorites.isFavMatch(m.id)?" is-fav":""), title:"Favoritar jogo", "aria-label":"Favoritar jogo" }, ["★"]);
+    star.onclick = (e) => { e.stopPropagation(); const fav = Favorites.toggleMatch(m.id); star.classList.toggle("is-fav", fav); };
+
+    const foot = Utils.el("div", { class:"mc-foot" }, [
+      Utils.el("span", { class:"mc-meta" }, [Utils.fmtDateTime(m.utcDate) + (m.venue ? " · "+m.venue : "")]),
+      star
+    ]);
+
+    card.append(top, teams, foot);
+    return card;
+  }
+  function statusChip(m){
+    if(m.status === "IN_PLAY") return Utils.el("span", { class:"chip live" }, [Utils.el("span",{class:"pulse"}), "AO VIVO"]);
+    if(m.status === "PAUSED") return Utils.el("span", { class:"chip live" }, [Utils.el("span",{class:"pulse"}), "INTERVALO"]);
+    if(m.status === "FINISHED") return Utils.el("span", { class:"chip finished" }, ["ENCERRADO"]);
+    if(m.status === "POSTPONED") return Utils.el("span", { class:"chip" }, ["ADIADO"]);
+    return Utils.el("span", { class:"chip scheduled" }, [Utils.fmtTime(m.utcDate)]);
+  }
+  function scoreOrTime(m, side){
+    const s = side==="home" ? m.score.fullTime.home : m.score.fullTime.away;
+    if(s === null || s === undefined) return "–";
+    return String(s);
+  }
+
+  /* ---------- HOME ---------- */
+  async function renderHome(){
+    const comp = Api.getComp();
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [
+        Utils.el("h1", { class:"view-title" }, ["Painel da Copa"]),
+        Utils.el("p", { class:"view-sub" }, ["Acompanhamento ao vivo · "+comp]),
+      ]),
+    ]));
+
+    const heroWrap = Utils.el("div", { class:"hero-strip" });
+    main().appendChild(heroWrap);
+    heroWrap.appendChild(Utils.el("div",{class:"skeleton"},[]));
+
+    const liveSec = section("Acontecendo agora");
+    const nextSec = section("Próximos jogos");
+    const lastSec = section("Últimos resultados");
+    const favSec = section("Seus favoritos");
+    main().append(liveSec.wrap, nextSec.wrap, lastSec.wrap, favSec.wrap);
+    [liveSec, nextSec, lastSec, favSec].forEach(s => s.body.appendChild(loadingBlock(3)));
+
+    try{
+      const data = await Api.matches(comp, "");
+      const matches = data.matches || [];
+      Notify.diffAndNotify(matches);
+
+      const now = Date.now();
+      const live = matches.filter(m => m.status==="IN_PLAY"||m.status==="PAUSED");
+      const upcoming = matches.filter(m => (m.status==="SCHEDULED"||m.status==="TIMED") && new Date(m.utcDate).getTime() > now)
+                               .sort((a,b)=> new Date(a.utcDate)-new Date(b.utcDate)).slice(0,6);
+      const finished = matches.filter(m => m.status==="FINISHED").sort((a,b)=> new Date(b.utcDate)-new Date(a.utcDate)).slice(0,6);
+      const favIds = Favorites.getAll().teams;
+      const favMatches = matches.filter(m => favIds.includes(m.homeTeam.id) || favIds.includes(m.awayTeam.id)).slice(0,6);
+
+      // hero strip
+      heroWrap.innerHTML = "";
+      heroWrap.append(
+        heroCell("Jogos ao vivo", String(live.length), live.length?"live":""),
+        heroCell("Próximo jogo", upcoming[0] ? Utils.fmtDateTime(upcoming[0].utcDate) : "—"),
+        heroCellCountdown(upcoming[0]),
+        heroCell("Jogos finalizados", String(finished.length)),
+        heroCell("Total de partidas", String(matches.length))
+      );
+
+      fillSection(liveSec, live, "Nenhum jogo ao vivo agora.");
+      fillSection(nextSec, upcoming, "Nenhum jogo agendado encontrado.");
+      fillSection(lastSec, finished, "Ainda não há resultados.");
+      fillSection(favSec, favMatches, "Favorite times para vê-los aqui.");
+
+    }catch(err){
+      heroWrap.innerHTML = ""; heroWrap.style.display="none";
+      [liveSec, nextSec, lastSec, favSec].forEach(s => { s.body.innerHTML=""; s.body.appendChild(errorState(err, renderHome)); });
+    }
+  }
+
+  function heroCell(label, value, cls){
+    return Utils.el("div", { class:"hero-cell" }, [
+      Utils.el("div", { class:"lbl" }, [label]),
+      Utils.el("div", { class:"val"+(cls?" "+cls:"") }, [value]),
+    ]);
+  }
+  function heroCellCountdown(match){
+    const cell = Utils.el("div", { class:"hero-cell" }, [Utils.el("div",{class:"lbl"},["Contagem regressiva"])]);
+    const cd = Utils.el("div", { class:"countdown" });
+    cell.appendChild(cd);
+    if(!match){ cd.textContent="—"; return cell; }
+    function tick(){
+      const diff = new Date(match.utcDate).getTime() - Date.now();
+      if(diff <= 0){ cd.textContent = "Começando…"; return; }
+      const d=Math.floor(diff/86400000), h=Math.floor(diff/3600000)%24, mn=Math.floor(diff/60000)%60, sc=Math.floor(diff/1000)%60;
+      cd.innerHTML = "";
+      [[d,"dias"],[h,"hrs"],[mn,"min"],[sc,"seg"]].forEach(([v,l]) => {
+        cd.appendChild(Utils.el("div",{class:"seg"},[Utils.el("b",{},[String(v).padStart(2,"0")]), Utils.el("span",{},[l])]));
+      });
+    }
+    tick(); setInterval(tick, 1000);
+    return cell;
+  }
+  function section(title){
+    const wrap = Utils.el("div", { class:"section" });
+    wrap.appendChild(Utils.el("div", { class:"section-title" }, [title]));
+    const body = Utils.el("div", { class:"grid grid-3 reveal-stagger" });
+    wrap.appendChild(body);
+    return { wrap, body };
+  }
+  function fillSection(sec, items, emptyMsg){
+    sec.body.innerHTML = "";
+    if(!items.length){ sec.body.appendChild(Utils.el("div",{class:"empty-state"},[emptyMsg])); return; }
+    items.forEach(m => sec.body.appendChild(matchCard(m)));
+  }
+
+  /* ---------- JOGOS (lista com filtros) ---------- */
+  async function renderMatches(){
+    const comp = Api.getComp();
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1", { class:"view-title" }, ["Jogos"]), Utils.el("p", { class:"view-sub" }, ["Todas as partidas da competição"]) ]),
+    ]));
+    const filterRow = Utils.el("div", { class:"filter-row" });
+    const statusSel = Utils.el("select", { class:"select" }, [
+      Utils.el("option",{value:""},["Todos os status"]),
+      Utils.el("option",{value:"SCHEDULED"},["Agendados"]),
+      Utils.el("option",{value:"LIVE"},["Ao vivo"]),
+      Utils.el("option",{value:"FINISHED"},["Encerrados"]),
+    ]);
+    const stageSel = Utils.el("select", { class:"select" }, [ Utils.el("option",{value:""},["Todas as fases"]) ]);
+    filterRow.append(statusSel, stageSel);
+    main().appendChild(filterRow);
+    const body = Utils.el("div", { class:"grid grid-3 reveal-stagger" });
+    main().appendChild(body);
+    body.appendChild(loadingBlock(9));
+
+    let allMatches = [];
+    async function load(){
+      try{
+        const data = await Api.matches(comp, "");
+        allMatches = data.matches || [];
+        const stages = [...new Set(allMatches.map(m=>m.stage))];
+        stageSel.innerHTML = "";
+        stageSel.appendChild(Utils.el("option",{value:""},["Todas as fases"]));
+        stages.forEach(s => stageSel.appendChild(Utils.el("option",{value:s},[Utils.stageLabel(s)])));
+        renderList();
+      }catch(err){ body.innerHTML=""; body.appendChild(errorState(err, load)); }
+    }
+    function renderList(){
+      let list = allMatches.slice().sort((a,b)=> new Date(a.utcDate)-new Date(b.utcDate));
+      if(statusSel.value === "LIVE") list = list.filter(m=>m.status==="IN_PLAY"||m.status==="PAUSED");
+      else if(statusSel.value) list = list.filter(m=>m.status===statusSel.value);
+      if(stageSel.value) list = list.filter(m=>m.stage===stageSel.value);
+      body.innerHTML = "";
+      if(!list.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum jogo encontrado com esses filtros."])); return; }
+      list.forEach(m => body.appendChild(matchCard(m)));
+    }
+    statusSel.onchange = renderList; stageSel.onchange = renderList;
+    load();
+  }
+
+  /* ---------- DETALHE DE JOGO (modal) ---------- */
+  async function openMatchModal(matchId){
+    const overlay = document.getElementById("matchModal");
+    const bodyEl = document.getElementById("modalBody");
+    overlay.classList.add("open");
+    document.getElementById("modalCompTag").textContent = "Carregando…";
+    bodyEl.innerHTML = ""; bodyEl.appendChild(loadingBlock(1));
+
+    try{
+      const data = await Api.matchDetail(matchId);
+      const m = data.match || data;
+      renderMatchModal(m);
+      history.replaceState(null, "", "#/jogos/match/"+matchId);
+    }catch(err){
+      bodyEl.innerHTML = "";
+      bodyEl.appendChild(errorState(err, () => openMatchModal(matchId)));
+    }
+  }
+
+  function renderMatchModal(m){
+    document.getElementById("modalCompTag").textContent = (m.competition ? m.competition.name : "") + " · " + Utils.stageLabel(m.stage);
+    document.getElementById("modalSubtitle").textContent = Utils.fmtDateTime(m.utcDate) + (m.venue ? " · "+m.venue : "") + (m.referees && m.referees[0] ? " · Árbitro: "+m.referees[0].name : "");
+    const bodyEl = document.getElementById("modalBody");
+    bodyEl.innerHTML = "";
+
+    const scoreboard = Utils.el("div", { class:"modal-scoreboard" }, [
+      Utils.el("div", { class:"modal-team" }, [Utils.crestImg(m.homeTeam,52), Utils.el("div",{class:"modal-team-name"},[m.homeTeam.name||"A definir"])]),
+      Utils.el("div", {}, [
+        statusChip(m),
+        Utils.el("div", { class:"modal-score-big" }, [String(m.score.fullTime.home ?? "–"), Utils.el("span",{style:"color:var(--text-2);font-size:1.4rem"},["×"]), String(m.score.fullTime.away ?? "–")]),
+        m.score.halfTime && m.score.halfTime.home!=null ? Utils.el("div",{class:"mc-meta",style:"text-align:center"},["1ºT: "+m.score.halfTime.home+"-"+m.score.halfTime.away]) : null,
+      ]),
+      Utils.el("div", { class:"modal-team" }, [Utils.crestImg(m.awayTeam,52), Utils.el("div",{class:"modal-team-name"},[m.awayTeam.name||"A definir"])]),
+    ]);
+    bodyEl.appendChild(scoreboard);
+
+    // tabs
+    const tabs = Utils.el("div", { class:"modal-tabs" });
+    const panels = {};
+    [["info","Informações"],["eventos","Linha do tempo"],["previsao","Previsão IA"],["palpite","Meu palpite"]].forEach(([k,label],i) => {
+      const t = Utils.el("button", { class:"tab-btn"+(i===0?" active":"") }, [label]);
+      t.onclick = () => {
+        Utils.$all(".tab-btn", tabs).forEach(x=>x.classList.remove("active"));
+        t.classList.add("active");
+        Object.values(panels).forEach(p=>p.classList.add("hidden"));
+        panels[k].classList.remove("hidden");
+      };
+      tabs.appendChild(t);
+    });
+    bodyEl.appendChild(tabs);
+
+    panels.info = infoPanel(m);
+    panels.eventos = eventsPanel(m);
+    panels.previsao = Utils.el("div", { class:"fade-in" }, [Utils.el("div",{class:"skeleton",style:"height:160px"},[])]);
+    panels.palpite = guessPanel(m);
+    Object.entries(panels).forEach(([k,p],i) => { if(i!==0) p.classList.add("hidden"); bodyEl.appendChild(p); });
+
+    // carrega previsão de forma assíncrona (depende de mais chamadas de API)
+    loadPrediction(m, panels.previsao);
+  }
+
+  function infoPanel(m){
+    const grid = Utils.el("div", { class:"info-grid" });
+    const items = [
+      ["Estádio", m.venue || "—"],
+      ["Fase", Utils.stageLabel(m.stage)],
+      ["Grupo", m.group ? m.group.replace("GROUP_","Grupo ") : "—"],
+      ["Rodada", m.matchday ?? "—"],
+      ["Status", Utils.statusLabel(m.status)],
+      ["Árbitro", (m.referees && m.referees[0]) ? m.referees[0].name : "Não informado"],
+    ];
+    items.forEach(([l,v]) => grid.appendChild(Utils.el("div",{class:"info-item"},[Utils.el("div",{class:"lbl"},[l]), Utils.el("div",{class:"val"},[String(v)])])));
+    const wrap = Utils.el("div", {}, [grid]);
+
+    // cartões/gols/substituições — quando disponíveis no plano da API
+    const cards = (m.bookings||[]);
+    const goals = (m.goals||[]);
+    const subs = (m.substitutions||[]);
+    if(cards.length){
+      wrap.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:20px"},["Cartões"]));
+      const list = Utils.el("div",{class:"timeline"});
+      cards.forEach(c => list.appendChild(Utils.el("div",{class:"tl-event"},[
+        Utils.el("span",{class:"tl-min"},[c.minute+"'"]),
+        Utils.el("span",{class:"tl-icon"},[c.card==="RED_CARD"||c.card==="RED"?"🟥":"🟨"]),
+        Utils.el("span",{},[(c.player&&c.player.name)||"—"]), Utils.el("span",{style:"color:var(--text-2);margin-left:auto"},[(c.team&&(c.team.shortName||c.team.name))||""])
+      ])));
+      wrap.appendChild(list);
+    } else if(m.status!=="SCHEDULED" && m.status!=="TIMED"){
+      wrap.appendChild(Utils.el("div",{class:"empty-state",style:"margin-top:16px"},["Dados de cartões e estatísticas detalhadas dependem do nível de acesso da API para esta competição."]));
+    }
+    return wrap;
+  }
+
+  function eventsPanel(m){
+    const wrap = Utils.el("div");
+    const goals = (m.goals||[]).map(g=>({ minute:g.minute, type:"goal", text:(g.scorer&&g.scorer.name||"Gol") + (g.team?(" — "+(g.team.shortName||g.team.name)):"") }));
+    const cards = (m.bookings||[]).map(c=>({ minute:c.minute, type:c.card==="RED_CARD"?"red":"yellow", text:(c.player&&c.player.name||"Cartão") + (c.team?(" — "+(c.team.shortName||c.team.name)):"") }));
+    const subs = (m.substitutions||[]).map(s=>({ minute:s.minute, type:"sub", text:(s.playerOut&&s.playerOut.name||"")+" ⇄ "+(s.playerIn&&s.playerIn.name||"") }));
+    const evs = [...goals,...cards,...subs].sort((a,b)=>(a.minute||0)-(b.minute||0));
+    if(!evs.length){ wrap.appendChild(Utils.el("div",{class:"empty-state"},["Sem eventos detalhados disponíveis para esta partida ainda."])); return wrap; }
+    const tl = Utils.el("div",{class:"timeline"});
+    const icon = { goal:"⚽", red:"🟥", yellow:"🟨", sub:"🔁" };
+    evs.forEach(e => tl.appendChild(Utils.el("div",{class:"tl-event"},[
+      Utils.el("span",{class:"tl-min"},[(e.minute??"-")+"'"]),
+      Utils.el("span",{class:"tl-icon"},[icon[e.type]||"•"]),
+      Utils.el("span",{},[e.text]),
+    ])));
+    wrap.appendChild(tl);
+    return wrap;
+  }
+
+  async function loadPrediction(m, panel){
+    try{
+      const comp = Api.getComp();
+      const [homeMatchesRes, awayMatchesRes] = await Promise.all([
+        Api.teamMatches(m.homeTeam.id, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
+        Api.teamMatches(m.awayTeam.id, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
+      ]);
+      let standings = null;
+      try{ standings = await Api.standings(comp); }catch(e){}
+      const ctx = { matches: [...(homeMatchesRes.matches||[]), ...(awayMatchesRes.matches||[])], standings };
+      const pred = Predict.predictMatch(m.homeTeam, m.awayTeam, ctx);
+      panel.innerHTML = "";
+      panel.appendChild(predictionCard(m, pred));
+    }catch(err){
+      panel.innerHTML = "";
+      panel.appendChild(errorState(err));
+    }
+  }
+
+  function predictionCard(m, p){
+    const card = Utils.el("div", { class:"predict-card fade-in" });
+    card.appendChild(Utils.el("div", { class:"predict-head" }, [
+      Utils.el("div", { style:"font-weight:700" }, ["Previsão da IA"]),
+      Utils.el("div", { class:"confidence" }, ["Confiança ", Utils.el("b",{},[p.confidence+"%"])]),
+    ]));
+    const bars = Utils.el("div", { class:"prob-bars" });
+    [
+      ["home", m.homeTeam.shortName||m.homeTeam.name, p.pHome],
+      ["draw", "Empate", p.pDraw],
+      ["away", m.awayTeam.shortName||m.awayTeam.name, p.pAway],
+    ].forEach(([cls,label,val]) => {
+      const pct = Math.round(val*100);
+      const row = Utils.el("div",{class:"prob-row"},[
+        Utils.el("span",{},[label]),
+        Utils.el("div",{class:"prob-track"},[(()=>{const f=Utils.el("div",{class:"prob-fill "+cls});f.style.width="0%";setTimeout(()=>f.style.width=pct+"%",30);return f;})()]),
+        Utils.el("span",{class:"mono",style:"text-align:right"},[pct+"%"]),
+      ]);
+      bars.appendChild(row);
+    });
+    card.appendChild(bars);
+
+    const grid = Utils.el("div", { class:"predict-grid" }, [
+      statBox("Placar provável", p.bestScore.h+" – "+p.bestScore.a),
+      statBox("Gols esperados (casa)", p.expHome.toFixed(2)),
+      statBox("Gols esperados (fora)", p.expAway.toFixed(2)),
+      statBox("Ambas marcam", Math.round(p.pBTTS*100)+"%"),
+      statBox("Mais de 2.5 gols", Math.round(p.pOver25*100)+"%"),
+      statBox("Menos de 2.5 gols", Math.round(p.pUnder25*100)+"%"),
+    ]);
+    card.appendChild(grid);
+
+    card.appendChild(Utils.el("div",{class:"section-title",style:"margin-top:4px"},["Fatores considerados"]));
+    const factors = Utils.el("div", { class:"factors" });
+    p.factors.forEach(f => factors.appendChild(Utils.el("div",{class:"factor"},[
+      Utils.el("span",{class:"f-name"},[f.name]),
+      Utils.el("span",{class:"f-val "+(f.positive?"pos":"neg")},[f.val]),
+    ])));
+    card.appendChild(factors);
+    card.appendChild(Utils.el("p",{style:"font-size:.7rem;color:var(--text-2);margin-top:12px"},["Estimativa estatística (distribuição de Poisson ponderada por forma recente e mando de campo). Não é garantia de resultado — é só pra divertir o palpite."]));
+    return card;
+  }
+  function statBox(label, val){ return Utils.el("div",{class:"predict-stat"},[Utils.el("b",{},[val]), Utils.el("span",{},[label])]); }
+
+  /* ---------- MEU PALPITE (painel dentro do modal) ---------- */
+  function guessPanel(m){
+    const wrap = Utils.el("div", { class:"fade-in" });
+    const existing = Guesses.get(m.id);
+    const lockedByTime = (m.status !== "SCHEDULED" && m.status !== "TIMED");
+
+    if(m.status === "FINISHED" && existing){
+      const ev = Guesses.evaluate(m.id, m);
+      wrap.appendChild(Utils.el("div",{class:"guess-result "+(ev.hits.vencedor?"hit":"miss")},[
+        ev.hits.vencedor ? "✅ Você acertou o resultado!" : "❌ Você errou o resultado.",
+      ]));
+      wrap.appendChild(Utils.el("div",{class:"mc-meta",style:"margin-top:8px"},[
+        "Seu palpite: "+existing.home+" × "+existing.away+" — Resultado real: "+m.score.fullTime.home+" × "+m.score.fullTime.away,
+        ev.hits.placarExato ? " · 🎯 placar exato!" : ""
+      ]));
+      return wrap;
+    }
+    if(lockedByTime){
+      wrap.appendChild(Utils.el("div",{class:"empty-state"},[existing ? "Palpite registrado. Aguardando o fim da partida para conferir." : "Esse jogo já começou — não é mais possível registrar palpite."]));
+      return wrap;
+    }
+
+    wrap.appendChild(Utils.el("p",{style:"font-size:.8rem;color:var(--text-1)"},["Registre seu palpite antes do apito inicial. Tudo fica salvo só no seu navegador — sem dinheiro, é só pra fixar e ver depois se acertou 😉"]));
+    const form = Utils.el("div", { class:"guess-form" });
+    const homeInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.home:"0"});
+    const awayInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.away:"0"});
+    const firstGoal = Utils.el("input",{type:"text",placeholder:"Ex: time da casa",value:existing?existing.firstGoal||"":""});
+    const cardsInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.cards||"":""});
+    const cornersInput = Utils.el("input",{type:"number",min:"0",max:"30",value:existing?existing.corners||"":""});
+    const motmInput = Utils.el("input",{type:"text",placeholder:"Nome do jogador",value:existing?existing.motm||"":""});
+
+    form.append(
+      field("Placar "+(m.homeTeam.shortName||"casa"), homeInput),
+      field("Placar "+(m.awayTeam.shortName||"fora"), awayInput),
+      field("Quem faz o 1º gol", firstGoal),
+      field("Total de cartões", cardsInput),
+      field("Total de escanteios", cornersInput),
+      field("Craque da partida", motmInput),
+    );
+    wrap.appendChild(form);
+    const saveBtn = Utils.el("button",{class:"btn btn-gold",style:"margin-top:14px"},[existing?"Atualizar palpite":"Salvar palpite"]);
+    saveBtn.onclick = () => {
+      Guesses.save(m.id, {
+        home: homeInput.value||0, away: awayInput.value||0, firstGoal: firstGoal.value,
+        cards: cardsInput.value, corners: cornersInput.value, motm: motmInput.value,
+        teams: { home: m.homeTeam.shortName||m.homeTeam.name, away: m.awayTeam.shortName||m.awayTeam.name },
+      });
+      Toast.show("Palpite salvo!", "Vamos conferir assim que o jogo terminar.");
+      wrap.innerHTML = ""; wrap.appendChild(guessPanel(m));
+    };
+    wrap.appendChild(saveBtn);
+    return wrap;
+  }
+  function field(label, input){ return Utils.el("div",{class:"field"},[Utils.el("label",{},[label]), input]); }
+
+  /* ---------- CLASSIFICAÇÃO ---------- */
+  async function renderStandings(){
+    const comp = Api.getComp();
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Classificação"]), Utils.el("p",{class:"view-sub"},["Tabelas por grupo"]) ]),
+    ]));
+    const body = Utils.el("div"); main().appendChild(body); body.appendChild(loadingBlock(2));
+    try{
+      const data = await Api.standings(comp);
+      body.innerHTML = "";
+      const groups = (data.standings||[]).filter(s=>s.type==="TOTAL");
+      if(!groups.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Classificação ainda não disponível para esta competição/fase."])); return; }
+      groups.forEach(g => body.appendChild(standingsTable(g)));
+    }catch(err){ body.innerHTML=""; body.appendChild(errorState(err, renderStandings)); }
+  }
+  function standingsTable(group){
+    const wrap = Utils.el("div", { class:"section" });
+    wrap.appendChild(Utils.el("div",{class:"section-title"},[group.group ? group.group.replace("GROUP_","Grupo ") : "Geral"]));
+    const table = Utils.el("table", { class:"table" });
+    table.appendChild(Utils.el("thead",{},[Utils.el("tr",{},[
+      Utils.el("th",{},["#"]), Utils.el("th",{},["Time"]), Utils.el("th",{class:"num"},["J"]),
+      Utils.el("th",{class:"num"},["V"]), Utils.el("th",{class:"num"},["E"]), Utils.el("th",{class:"num"},["D"]),
+      Utils.el("th",{class:"num"},["GP"]), Utils.el("th",{class:"num"},["GC"]), Utils.el("th",{class:"num"},["SG"]),
+      Utils.el("th",{class:"num"},["Pts"]), Utils.el("th",{},["Forma"]),
+    ])]));
+    const tbody = Utils.el("tbody");
+    group.table.forEach(row => {
+      const tr = Utils.el("tr", { class: row.position<=2 ? "qualify-line":"" });
+      const star = Utils.el("button",{class:"fav-star"+(Favorites.isFavTeam(row.team.id)?" is-fav":""),style:"margin-left:8px"},["★"]);
+      star.onclick=(e)=>{e.stopPropagation();const f=Favorites.toggleTeam(row.team.id);star.classList.toggle("is-fav",f);};
+      tr.append(
+        Utils.el("td",{},[Utils.el("span",{class:"pos-badge"},[String(row.position)])]),
+        Utils.el("td",{},[Utils.el("a",{class:"team-cell",href:"#/time/"+row.team.id},[Utils.crestImg(row.team), row.team.shortName||row.team.name, star])]),
+        Utils.el("td",{class:"num mono"},[String(row.playedGames)]),
+        Utils.el("td",{class:"num mono"},[String(row.won)]),
+        Utils.el("td",{class:"num mono"},[String(row.draw)]),
+        Utils.el("td",{class:"num mono"},[String(row.lost)]),
+        Utils.el("td",{class:"num mono"},[String(row.goalsFor)]),
+        Utils.el("td",{class:"num mono"},[String(row.goalsAgainst)]),
+        Utils.el("td",{class:"num mono"},[(row.goalDifference>0?"+":"")+row.goalDifference]),
+        Utils.el("td",{class:"num mono",style:"font-weight:700;color:var(--gold)"},[String(row.points)]),
+        Utils.el("td",{},[formDots(row.form)]),
+      );
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+  }
+  function formDots(formStr){
+    const w = Utils.el("div",{class:"form-dots"});
+    (formStr||"").split(",").filter(Boolean).forEach(r => w.appendChild(Utils.el("span",{class:"form-dot "+r.trim()[0]})));
+    if(!formStr) w.appendChild(Utils.el("span",{class:"mc-meta"},["—"]));
+    return w;
+  }
+
+  /* ---------- MATA-MATA ---------- */
+  async function renderBracket(){
+    const comp = Api.getComp();
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Mata-mata"]), Utils.el("p",{class:"view-sub"},["Chave eliminatória — clique num confronto para ver detalhes"]) ]),
+    ]));
+    const body = Utils.el("div"); main().appendChild(body); body.appendChild(loadingBlock(1));
+    try{
+      const data = await Api.matches(comp, "");
+      const ko = (data.matches||[]).filter(m => m.stage && m.stage !== "GROUP_STAGE");
+      body.innerHTML = "";
+      if(!ko.length){ body.appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Fase eliminatória ainda não definida"]), "A chave aparece automaticamente assim que os confrontos do mata-mata forem sorteados/disponibilizados pela API."])); return; }
+      const order = ["LAST_16","ROUND_OF_16","QUARTER_FINALS","SEMI_FINALS","THIRD_PLACE","FINAL"];
+      const stages = order.filter(s => ko.some(m=>m.stage===s));
+      const bracket = Utils.el("div", { class:"bracket" });
+      stages.forEach(stage => {
+        const matches = ko.filter(m=>m.stage===stage).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+        const col = Utils.el("div", { class:"bracket-round" }, [Utils.el("div",{class:"bracket-round-title"},[Utils.stageLabel(stage)])]);
+        matches.forEach(m => col.appendChild(bracketMatch(m)));
+        bracket.appendChild(col);
+      });
+      body.appendChild(bracket);
+    }catch(err){ body.innerHTML=""; body.appendChild(errorState(err, renderBracket)); }
+  }
+  function bracketMatch(m){
+    const bm = Utils.el("div", { class:"bracket-match" });
+    bm.onclick = () => location.hash = "#/jogos/match/"+m.id;
+    const hWin = m.status==="FINISHED" && m.score.winner==="HOME_TEAM";
+    const aWin = m.status==="FINISHED" && m.score.winner==="AWAY_TEAM";
+    bm.append(
+      Utils.el("div",{class:"bm-row"+(hWin?" win":"")},[Utils.el("span",{class:"bm-team"},[Utils.crestImg(m.homeTeam,16), m.homeTeam.shortName||m.homeTeam.name||"A definir"]), Utils.el("span",{class:"bm-score"},[String(m.score.fullTime.home ?? "-")])]),
+      Utils.el("div",{class:"bm-row"+(aWin?" win":"")},[Utils.el("span",{class:"bm-team"},[Utils.crestImg(m.awayTeam,16), m.awayTeam.shortName||m.awayTeam.name||"A definir"]), Utils.el("span",{class:"bm-score"},[String(m.score.fullTime.away ?? "-")])]),
+    );
+    return bm;
+  }
+
+  /* ---------- ESTATÍSTICAS ---------- */
+  async function renderStats(){
+    const comp = Api.getComp();
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Estatísticas"]), Utils.el("p",{class:"view-sub"},["Visão geral do torneio"]) ]),
+    ]));
+    const body = Utils.el("div"); main().appendChild(body); body.appendChild(loadingBlock(2));
+    try{
+      const data = await Api.matches(comp, "");
+      const finished = (data.matches||[]).filter(m=>m.status==="FINISHED");
+      body.innerHTML = "";
+      if(!finished.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Ainda não há jogos finalizados para gerar estatísticas."])); return; }
+
+      // gols por rodada/matchday
+      const byMatchday = {};
+      finished.forEach(m => { const k=m.matchday||"?"; byMatchday[k]=(byMatchday[k]||0)+ (m.score.fullTime.home||0)+(m.score.fullTime.away||0); });
+      const mdLabels = Object.keys(byMatchday).sort((a,b)=>Number(a)-Number(b));
+      const mdValues = mdLabels.map(k=>byMatchday[k]);
+
+      // distribuição de placares
+      const totalGoals = finished.reduce((s,m)=>s+(m.score.fullTime.home||0)+(m.score.fullTime.away||0),0);
+      const avgGoals = (totalGoals/finished.length).toFixed(2);
+      const btts = finished.filter(m=>m.score.fullTime.home>0 && m.score.fullTime.away>0).length;
+      const over25 = finished.filter(m=>(m.score.fullTime.home+m.score.fullTime.away)>2).length;
+      const homeWins = finished.filter(m=>m.score.winner==="HOME_TEAM").length;
+      const draws = finished.filter(m=>m.score.winner==="DRAW").length;
+      const awayWins = finished.filter(m=>m.score.winner==="AWAY_TEAM").length;
+
+      const banner = Utils.el("div", { class:"stat-banner" }, [
+        statCell(finished.length, "Jogos disputados"), statCell(totalGoals, "Gols marcados"),
+        statCell(avgGoals, "Gols por jogo"), statCell(Math.round(btts/finished.length*100)+"%", "Ambas marcam"),
+        statCell(Math.round(over25/finished.length*100)+"%", "Mais de 2.5 gols"),
+      ]);
+      body.appendChild(banner);
+
+      const grid = Utils.el("div", { class:"grid grid-2" });
+      const c1 = chartCard("Gols por rodada");
+      const c2 = chartCard("Resultados (casa / empate / fora)");
+      grid.append(c1.wrap, c2.wrap);
+      body.appendChild(grid);
+      requestAnimationFrame(() => {
+        Charts.barChart(c1.canvas, mdLabels.map(l=>"R"+l), mdValues, { color:"#e0a72e" });
+        Charts.donutChart(c2.canvas, [
+          { label:"Casa", value:homeWins, color:"#e0a72e" },
+          { label:"Empate", value:draws, color:"#6c777c" },
+          { label:"Fora", value:awayWins, color:"#4f8ef0" },
+        ]);
+        c2.wrap.appendChild(legendFor([["Casa","#e0a72e"],["Empate","#6c777c"],["Fora","#4f8ef0"]]));
+      });
+
+    }catch(err){ body.innerHTML=""; body.appendChild(errorState(err, renderStats)); }
+  }
+  function statCell(val,label){ return Utils.el("div",{class:"cell"},[Utils.el("b",{},[String(val)]), Utils.el("span",{},[label])]); }
+  function chartCard(title){
+    const wrap = Utils.el("div",{class:"chart-card"},[Utils.el("div",{class:"section-title"},[title])]);
+    const canvas = Utils.el("canvas",{"data-h":"220"});
+    wrap.appendChild(canvas);
+    return { wrap, canvas };
+  }
+  function legendFor(pairs){
+    const l = Utils.el("div",{class:"legend"});
+    pairs.forEach(([label,color]) => l.appendChild(Utils.el("span",{},[Utils.el("i",{style:"background:"+color}), label])));
+    return l;
+  }
+
+  /* ---------- PALPITES (página) ---------- */
+  async function renderGuesses(){
+    main().innerHTML = "";
+    const comp = Api.getComp();
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Meus Palpites"]), Utils.el("p",{class:"view-sub"},["Histórico, acertos e sequência — tudo salvo no seu navegador"]) ]),
+    ]));
+    const s = Guesses.stats();
+    main().appendChild(Utils.el("div", { class:"stat-banner" }, [
+      statCell(s.total, "Palpites registrados"), statCell(s.checked, "Já conferidos"),
+      statCell(s.correct, "Resultados certos"), statCell(s.exact, "Placares exatos"),
+      statCell(s.pct+"%", "Precisão"), statCell(s.streak.current, "Sequência atual"),
+    ]));
+    const listWrap = Utils.el("div"); main().appendChild(listWrap);
+    const guesses = Guesses.all();
+    const ids = Object.keys(guesses);
+    if(!ids.length){ listWrap.appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum palpite ainda"]), "Abra um jogo agendado e registre seu placar antes do apito inicial."])); return; }
+    if(!Api.getKey()){ listWrap.appendChild(noKeyState()); return; }
+    listWrap.appendChild(loadingBlock(3));
+    try{
+      const data = await Api.matches(comp, "");
+      const byId = {}; (data.matches||[]).forEach(m=>byId[m.id]=m);
+      listWrap.innerHTML = "";
+      const grid = Utils.el("div",{class:"grid grid-2"});
+      ids.forEach(id => {
+        const m = byId[id]; const g = guesses[id];
+        if(!m) return;
+        if(m.status === "FINISHED") Guesses.evaluate(id, m);
+        const card = Utils.el("div",{class:"match-card"},[]);
+        card.onclick = () => location.hash = "#/jogos/match/"+id;
+        card.appendChild(Utils.el("div",{class:"mc-top"},[Utils.el("span",{},[m.homeTeam.shortName+" x "+m.awayTeam.shortName]), statusChip(m)]));
+        card.appendChild(Utils.el("div",{class:"mc-meta"},["Seu palpite: "+g.home+" × "+g.away]));
+        if(m.status==="FINISHED"){
+          card.appendChild(Utils.el("div",{class:"mc-meta"},["Real: "+m.score.fullTime.home+" × "+m.score.fullTime.away]));
+          card.appendChild(Utils.el("div",{class:"guess-result "+(g.hits.vencedor?"hit":"miss"),style:"margin-top:8px"},[g.hits.vencedor?"✅ Acertou o resultado":"❌ Errou o resultado"]));
+        }
+        grid.appendChild(card);
+      });
+      listWrap.appendChild(grid);
+    }catch(err){ listWrap.innerHTML=""; listWrap.appendChild(errorState(err, renderGuesses)); }
+  }
+
+  /* ---------- FAVORITOS ---------- */
+  async function renderFavorites(){
+    main().innerHTML = "";
+    main().appendChild(Utils.el("div", { class:"view-head" }, [
+      Utils.el("div", {}, [ Utils.el("h1",{class:"view-title"},["Favoritos"]), Utils.el("p",{class:"view-sub"},["Times que você está de olho"]) ]),
+    ]));
+    const favs = Favorites.getAll();
+    if(!favs.teams.length){ main().appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum favorito ainda"]),"Toque na estrela ★ ao lado de um time na Classificação para favoritá-lo."])); return; }
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    const grid = Utils.el("div",{class:"grid grid-4"}); main().appendChild(grid); grid.appendChild(loadingBlock(4));
+    try{
+      const comp = Api.getComp();
+      const data = await Api.teams(comp);
+      grid.innerHTML = "";
+      const teams = (data.teams||[]).filter(t=>favs.teams.includes(t.id));
+      teams.forEach(t => {
+        const card = Utils.el("a",{class:"match-card",href:"#/time/"+t.id,style:"text-align:center"},[
+          Utils.crestImg(t,48),
+          Utils.el("div",{style:"font-weight:700;margin-top:10px"},[t.shortName||t.name]),
+        ]);
+        grid.appendChild(card);
+      });
+      if(!teams.length) grid.appendChild(Utils.el("div",{class:"empty-state"},["Times favoritos não encontrados na competição atual."]));
+    }catch(err){ grid.innerHTML=""; grid.appendChild(errorState(err, renderFavorites)); }
+  }
+
+  /* ---------- PÁGINA DE TIME ---------- */
+  async function renderTeam(teamId){
+    main().innerHTML = "";
+    if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
+    main().appendChild(loadingBlock(1));
+    try{
+      const [team, matchesRes] = await Promise.all([
+        Api.team(teamId),
+        Api.teamMatches(teamId, "?limit=15"),
+      ]);
+      main().innerHTML = "";
+      const isFav = Favorites.isFavTeam(team.id);
+      const head = Utils.el("div", { class:"view-head" }, [
+        Utils.el("div", { style:"display:flex;align-items:center;gap:14px" }, [
+          Utils.crestImg(team, 48),
+          Utils.el("div",{},[ Utils.el("h1",{class:"view-title"},[team.name]), Utils.el("p",{class:"view-sub"},[team.area?team.area.name:"", team.founded?(" · Fundado em "+team.founded):""]) ]),
+        ]),
+      ]);
+      const star = Utils.el("button",{class:"btn"+(isFav?" btn-gold":"")},[isFav?"★ Favorito":"☆ Favoritar"]);
+      star.onclick=()=>{ const f=Favorites.toggleTeam(team.id); star.textContent = f?"★ Favorito":"☆ Favoritar"; star.classList.toggle("btn-gold",f); };
+      head.appendChild(star);
+      main().appendChild(head);
+
+      const matches = matchesRes.matches||[];
+      const finished = matches.filter(m=>m.status==="FINISHED");
+      const upcoming = matches.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED").sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+      const gf = finished.reduce((s,m)=> s + (m.homeTeam.id===team.id ? m.score.fullTime.home : m.score.fullTime.away), 0);
+      const ga = finished.reduce((s,m)=> s + (m.homeTeam.id===team.id ? m.score.fullTime.away : m.score.fullTime.home), 0);
+      const wins = finished.filter(m=> (m.homeTeam.id===team.id && m.score.winner==="HOME_TEAM") || (m.awayTeam.id===team.id && m.score.winner==="AWAY_TEAM")).length;
+      const draws = finished.filter(m=>m.score.winner==="DRAW").length;
+      const losses = finished.length - wins - draws;
+
+      main().appendChild(Utils.el("div", { class:"stat-banner" }, [
+        statCell(finished.length,"Jogos"), statCell(wins,"Vitórias"), statCell(draws,"Empates"),
+        statCell(losses,"Derrotas"), statCell(gf,"Gols pró"), statCell(ga,"Gols sofridos"),
+      ]));
+
+      const grid = Utils.el("div",{class:"grid grid-2"});
+      const sec1 = sectionBlock("Últimos jogos", finished.slice(-6).reverse());
+      const sec2 = sectionBlock("Próximos jogos", upcoming.slice(0,6));
+      main().append(sec1, sec2);
+
+      if(team.squad && team.squad.length){
+        main().appendChild(Utils.el("div",{class:"section-title",style:"margin-top:24px"},["Elenco"]));
+        const sqGrid = Utils.el("div",{class:"grid grid-4"});
+        team.squad.slice(0,24).forEach(p => {
+          const age = p.dateOfBirth ? Math.floor((Date.now()-new Date(p.dateOfBirth).getTime())/3.15576e10) : "—";
+          sqGrid.appendChild(Utils.el("a",{class:"match-card",href:"#",style:"cursor:default"},[
+            Utils.el("div",{style:"font-weight:700"},[p.name]),
+            Utils.el("div",{class:"mc-meta"},[(p.position||"Posição n/d")+" · "+age+" anos"]),
+          ]));
+        });
+        main().appendChild(sqGrid);
+        main().appendChild(Utils.el("p",{style:"font-size:.72rem;color:var(--text-2);margin-top:8px"},["Estatísticas detalhadas por jogador (gols, cartões, minutos) dependem do nível de acesso da API e ficam disponíveis para os artilheiros em Estatísticas → Artilharia, quando suportado pela competição."]));
+      }
+    }catch(err){ main().innerHTML=""; main().appendChild(errorState(err, ()=>renderTeam(teamId))); }
+  }
+  function sectionBlock(title, matches){
+    const wrap = Utils.el("div",{class:"section"},[Utils.el("div",{class:"section-title"},[title])]);
+    const grid = Utils.el("div",{class:"grid grid-3"});
+    if(!matches.length) grid.appendChild(Utils.el("div",{class:"empty-state"},["Nada por aqui ainda."]));
+    matches.forEach(m=>grid.appendChild(matchCard(m)));
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  return {
+    renderHome, renderMatches, openMatchModal, renderMatchModal, renderStandings,
+    renderBracket, renderStats, renderGuesses, renderFavorites, renderTeam, errorState, noKeyState,
+  };
+})();
+
+/* ----------------------------------------------------------------
+   13. APP — bootstrap, eventos globais e configurações
+   ---------------------------------------------------------------- */
+function openSettings(){
+  document.getElementById("apiKeyInput").value = Api.getKey();
+  document.getElementById("compSelect").value = Api.getComp();
+  document.getElementById("settingsModal").classList.add("open");
+}
+function closeSettings(){ document.getElementById("settingsModal").classList.remove("open"); }
+function closeMatchModal(){ document.getElementById("matchModal").classList.remove("open"); }
+
+function initApp(){
+  Theme.init();
+  Notify.updateBtn();
+
+  // rotas
+  Router.on("/", Views.renderHome);
+  Router.on("/jogos", Views.renderMatches);
+  Router.on("/jogos/match", (id) => { Views.renderMatches().then(()=>Views.openMatchModal(id)); Views.openMatchModal(id); });
+  Router.on("/classificacao", Views.renderStandings);
+  Router.on("/mata-mata", Views.renderBracket);
+  Router.on("/estatisticas", Views.renderStats);
+  Router.on("/palpites", Views.renderGuesses);
+  Router.on("/favoritos", Views.renderFavorites);
+  Router.on("/time", Views.renderTeam);
+  Router.init();
+
+  // header actions
+  document.getElementById("themeBtn").onclick = Theme.toggle;
+  document.getElementById("notifyBtn").onclick = Notify.requestPermission;
+  document.getElementById("refreshBtn").onclick = () => { Api.invalidate(""); Router.resolve(); Toast.show("Atualizado", "Dados recarregados da API."); };
+  document.getElementById("settingsBtn").onclick = openSettings;
+  document.getElementById("settingsCloseBtn").onclick = closeSettings;
+  document.getElementById("settingsModal").addEventListener("click", (e)=>{ if(e.target.id==="settingsModal") closeSettings(); });
+  document.getElementById("modalCloseBtn").onclick = () => { closeMatchModal(); location.hash = "#/jogos"; };
+  document.getElementById("matchModal").addEventListener("click", (e)=>{ if(e.target.id==="matchModal"){ closeMatchModal(); location.hash="#/jogos"; } });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeSettings(); closeMatchModal(); } });
+
+  document.getElementById("saveSettingsBtn").onclick = () => {
+    const key = document.getElementById("apiKeyInput").value.trim();
+    const comp = document.getElementById("compSelect").value;
+    if(!key){ document.getElementById("settingsMsg").textContent = "Cole uma chave válida."; return; }
+    Store.set("apiKey", key); Store.set("competition", comp);
+    Api.invalidate("");
+    closeSettings();
+    Toast.show("Configurado!", "Carregando dados da competição "+comp+"…");
+    Router.resolve();
+  };
+
+  // busca
+  const searchInput = document.getElementById("searchInput");
+  searchInput.addEventListener("keydown", Utils.debounce((e) => {
+    if(e.key === "Enter" && searchInput.value.trim()){
+      // busca simples: filtra na página de jogos pelo nome do time
+      location.hash = "#/jogos";
+      setTimeout(() => {
+        const q = searchInput.value.trim().toLowerCase();
+        Utils.$all(".match-card").forEach(card => {
+          const txt = card.textContent.toLowerCase();
+          card.style.display = txt.includes(q) ? "" : "none";
+        });
+      }, 400);
+    }
+  }, 150));
+
+  // notificações: poll periódico de partidas ao vivo
+  Notify.startPolling(async () => {
+    if(!Api.getKey()) return [];
+    const data = await Api.matches(Api.getComp(), "");
+    return data.matches || [];
+  });
+
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
+
+})();
+</script>
+</body>
+</html>
