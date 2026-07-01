@@ -1030,8 +1030,11 @@ const Notify = (function(){
    9. PREDICT — Motor de Previsão de IA (multi-modelo)
    ===================================================================== */
 /* =====================================================================
-9. PREDICT — v3 (Elo triplo + Poisson-DixonColes + SOS iterativo + shrinkage bayesiano + forma ponderada + modelo de tabela + H2H recência + ajuste fino por forma)
-===================================================================== */
+9. PREDICT — v4 (Elo triplo + Poisson-DixonColes com ρ calibrado nos dados
+   reais + SOS iterativo + shrinkage bayesiano + forma ponderada + modelo
+   de tabela + H2H recência + fadiga/congestionamento + pressão de jogo
+   decisivo + penalização de overconfidence)
+   ===================================================================== */
 const Predict = (function(){
   function poisson(lambda, k){
     if(lambda <= 0) return k === 0 ? 1 : 0;
@@ -1049,18 +1052,54 @@ const Predict = (function(){
 
   function buildLeagueStats(matches){
     const finished = matches.filter(m => m.status === "FINISHED");
-    if(!finished.length) return { avgHomeGoals:1.45, avgAwayGoals:1.15, avgTotal:2.60, n:0 };
+    if(!finished.length) return { avgHomeGoals:1.45, avgAwayGoals:1.15, avgTotal:2.60, n:0, varTotal:2.1 };
     let hg=0, ag=0;
     finished.forEach(m => { hg += (m.score.fullTime.home||0); ag += (m.score.fullTime.away||0); });
     const n = finished.length;
-    return { avgHomeGoals: hg/n, avgAwayGoals: ag/n, avgTotal:(hg+ag)/n, n };
+    const avgHomeGoals = hg/n, avgAwayGoals = ag/n;
+    let varSum = 0;
+    finished.forEach(m => {
+      const t = (m.score.fullTime.home||0)+(m.score.fullTime.away||0);
+      varSum += Math.pow(t-(avgHomeGoals+avgAwayGoals),2);
+    });
+    return { avgHomeGoals, avgAwayGoals, avgTotal:avgHomeGoals+avgAwayGoals, n, varTotal: n>1?varSum/(n-1):2.1 };
   }
 
-  // ρ dinâmico: ligas com menos gols têm correlação negativa mais forte em placares baixos
-  function estimateRho(leagueStats, isKnockout){
-    const avgTotal = leagueStats.avgHomeGoals + leagueStats.avgAwayGoals;
-    const base = clamp(-0.10 - (2.6 - avgTotal) * 0.045, -0.24, 0.0);
-    return isKnockout ? base - 0.03 : base;
+  /* ---------- ρ (correlação Dixon-Coles) CALIBRADO NOS DADOS REAIS -----------
+     Em vez de uma fórmula arbitrária, estimamos ρ comparando a frequência
+     observada de placares baixos (0x0, 1x0, 0x1, 1x1) com a frequência que
+     um Poisson independente preveria. Isso é literalmente o método usado
+     no paper original de Dixon & Coles (1997), simplificado para rodar no
+     navegador sem otimização numérica pesada (busca em grade fina). */
+  function calibratedRho(matches, leagueStats, isKnockout){
+    const finished = matches.filter(m => m.status === "FINISHED");
+    const fallback = clamp(-0.10 - (2.6 - leagueStats.avgTotal) * 0.045, -0.24, 0.0) - (isKnockout?0.03:0);
+    if(finished.length < 25) return fallback; // amostra pequena: não arriscar, usa heurística segura
+
+    const lh = leagueStats.avgHomeGoals, la = leagueStats.avgAwayGoals;
+    const counts = { "0-0":0, "1-0":0, "0-1":0, "1-1":0 };
+    finished.forEach(m => {
+      const h = m.score.fullTime.home||0, a = m.score.fullTime.away||0;
+      const key = h+"-"+a;
+      if(counts[key] !== undefined) counts[key]++;
+    });
+    const n = finished.length;
+    const obs = { "0-0":counts["0-0"]/n, "1-0":counts["1-0"]/n, "0-1":counts["0-1"]/n, "1-1":counts["1-1"]/n };
+
+    let bestRho = fallback, bestErr = Infinity;
+    for(let r=-0.35; r<=0.05; r+=0.01){
+      const p00 = poisson(lh,0)*poisson(la,0)*tau(0,0,lh,la,r);
+      const p10 = poisson(lh,1)*poisson(la,0)*tau(1,0,lh,la,r);
+      const p01 = poisson(lh,0)*poisson(la,1)*tau(0,1,lh,la,r);
+      const p11 = poisson(lh,1)*poisson(la,1)*tau(1,1,lh,la,r);
+      const err = Math.pow(p00-obs["0-0"],2)+Math.pow(p10-obs["1-0"],2)+Math.pow(p01-obs["0-1"],2)+Math.pow(p11-obs["1-1"],2);
+      if(err < bestErr){ bestErr = err; bestRho = r; }
+    }
+    // mistura com o fallback pra evitar overfit em amostras ainda moderadas (shrinkage)
+    const weight = clamp((n-25)/75, 0, 0.85);
+    let rho = fallback*(1-weight) + bestRho*weight;
+    if(isKnockout) rho -= 0.02;
+    return clamp(rho, -0.35, 0.05);
   }
 
   /* ---------- Elo triplo: geral + ataque + defesa ---------- */
@@ -1073,7 +1112,6 @@ const Predict = (function(){
     const a = id => A[id] ?? INIT;
     const d = id => D[id] ?? INIT;
 
-    // HFA empírico
     let hfaSum = 0;
     finished.forEach(m => {
       const hg = m.score.fullTime.home||0, ag = m.score.fullTime.away||0;
@@ -1088,7 +1126,6 @@ const Predict = (function(){
       const resH = diff>0?1:(diff<0?0:0.5);
       const resA = 1-resH;
 
-      // Elo GERAL
       const expH = 1/(1+Math.pow(10, -((g(hId)+HFA-g(aId))/400)));
       const expA = 1-expH;
       const gDiff = Math.abs(diff);
@@ -1097,14 +1134,12 @@ const Predict = (function(){
       G[hId] = g(hId) + K*(resH-expH);
       G[aId] = g(aId) + K*(resA-expA);
 
-      // Elo de ATAQUE (baseado em gols marcados)
       const atkResH = clamp(hg/1.5, 0, 2);
       const atkResA = clamp(ag/1.3, 0, 2);
       const Ka = 14;
       A[hId] = a(hId) + Ka*(atkResH - 1);
       A[aId] = a(aId) + Ka*(atkResA - 1);
 
-      // Elo de DEFESA (inverso: levar gol é ruim)
       const Kd = 14;
       D[hId] = d(hId) - Kd*(ag - 1.1);
       D[aId] = d(aId) - Kd*(hg - 1.3);
@@ -1154,6 +1189,7 @@ const Predict = (function(){
     const N = finished.length;
     let wins=0, draws=0, losses=0, formSeq=[];
     let gfHW=0, gaHW=0, hW=0, gfAW=0, gaAW=0, aW=0, hN=0, aN=0;
+    let cleanSheets=0, failedToScore=0;
     finished.forEach((m, idx) => {
       const isHome = m.homeTeam.id === teamId;
       const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
@@ -1164,17 +1200,22 @@ const Predict = (function(){
       if(my > opp){ wins++; formSeq.push("W"); }
       else if(my < opp){ losses++; formSeq.push("L"); }
       else { draws++; formSeq.push("D"); }
+      if(opp === 0) cleanSheets++;
+      if(my === 0) failedToScore++;
       if(isHome){ gfHW += my*weight; gaHW += opp*weight; hW += weight; hN++; }
       else { gfAW += my*weight; gaAW += opp*weight; aW += weight; aN++; }
     });
     return {
       n:N, wins, draws, losses, winRate: wins/N,
       formSeq: formSeq.slice(-6),
+      cleanSheetRate: cleanSheets/N, failedToScoreRate: failedToScore/N,
       attackHomeRate: hW>0 ? gfHW/hW : null,
       defenseHomeRate: hW>0 ? gaHW/hW : null,
       attackAwayRate: aW>0 ? gfAW/aW : null,
       defenseAwayRate: aW>0 ? gaAW/aW : null,
       homeN:hN, awayN:aN,
+      lastDate: finished[finished.length-1].utcDate,
+      matchDatesRecent: finished.slice(-6).map(m=>m.utcDate),
     };
   }
 
@@ -1212,7 +1253,7 @@ const Predict = (function(){
   function blendedStrength(teamId, inCompMatches, globalMatches, leagueStats, sosRatings){
     const inComp = rawStrength(teamId, inCompMatches);
     const global = rawStrength(teamId, globalMatches||[]);
-    const PSEUDO_IN = 5, PSEUDO_GL = 3;
+    const PSEUDO_IN = 5;
     const GLOBAL_DAMPING = 0.55;
     function combine(inRate, inW, globalRate, globalW, leagueAvg){
       let num = leagueAvg * PSEUDO_IN;
@@ -1232,7 +1273,6 @@ const Predict = (function(){
     let attackAway = clamp(combine(inComp&&inComp.attackAwayRate, iaN, global&&global.attackAwayRate, gaN, leagueStats.avgAwayGoals)/leagueStats.avgAwayGoals, 0.25, 3);
     let defenseAway = clamp(combine(inComp&&inComp.defenseAwayRate, iaN, global&&global.defenseAwayRate, gaN, leagueStats.avgHomeGoals)/leagueStats.avgHomeGoals, 0.25, 3);
 
-    // mistura com SOS (peso cresce com nº de jogos na competição)
     if(sosRatings && sosRatings[teamId]){
       const sos = sosRatings[teamId];
       const n = inComp ? inComp.n : 0;
@@ -1245,13 +1285,17 @@ const Predict = (function(){
 
     const winRate = inComp ? inComp.winRate : (global ? global.winRate : null);
     const formSeq = inComp ? inComp.formSeq : (global ? global.formSeq : []);
+    const cleanSheetRate = inComp ? inComp.cleanSheetRate : (global ? global.cleanSheetRate : null);
+    const failedToScoreRate = inComp ? inComp.failedToScoreRate : (global ? global.failedToScoreRate : null);
+    const recentDatesRaw = (inComp && inComp.matchDatesRecent && inComp.matchDatesRecent.length) ? inComp.matchDatesRecent : (global ? global.matchDatesRecent : []);
     return {
       attackHome: clamp(attackHome, 0.25, 3),
       defenseHome: clamp(defenseHome, 0.25, 3),
       attackAway: clamp(attackAway, 0.25, 3),
       defenseAway: clamp(defenseAway, 0.25, 3),
       n: inComp?inComp.n:0, globalN: global?global.n:0,
-      winRate, formSeq,
+      winRate, formSeq, cleanSheetRate, failedToScoreRate,
+      recentDates: recentDatesRaw || [],
     };
   }
 
@@ -1286,7 +1330,6 @@ const Predict = (function(){
     return null;
   }
 
-  /* ---------- modelo baseado na classificação ---------- */
   function standingsWinProb(standingsResp, homeId, awayId){
     if(!standingsResp || !standingsResp.standings) return null;
     const table = standingsResp.standings.find(t=>t.type==="TOTAL");
@@ -1304,7 +1347,52 @@ const Predict = (function(){
     let pAway = clamp((1-pWinRaw) - drawShare/2, 0.03, 0.94);
     let pDraw = clamp(1-pHome-pAway, 0.03, 0.9);
     const sum = pHome+pDraw+pAway;
-    return { pHome:pHome/sum, pDraw:pDraw/sum, pAway:pAway/sum, hPPG, aPPG };
+    return { pHome:pHome/sum, pDraw:pDraw/sum, pAway:pAway/sum, hPPG, aPPG, hRow, aRow, totalTeams: table.table.length };
+  }
+
+  /* ---------- FADIGA / CONGESTIONAMENTO DE JOGOS -----------
+     Pesquisa em ciência do esporte mostra queda de desempenho em jogos
+     disputados com menos de ~4 dias de descanso, e um pequeno efeito de
+     "enferrujamento" com mais de ~12 dias sem jogar. Calculamos isso a
+     partir das datas reais dos últimos jogos do time (competição + outras). */
+  function fatigueFactor(recentDates, referenceNow){
+    if(!recentDates || !recentDates.length) return { mult:1, restDays:null, congestion:0 };
+    const sorted = recentDates.slice().sort((a,b)=>new Date(a)-new Date(b));
+    const last = new Date(sorted[sorted.length-1]).getTime();
+    const now = referenceNow || Date.now();
+    const restDays = (now - last) / 86400000;
+    // jogos nos últimos 10 dias (a partir de "agora") = congestionamento
+    const congestion = sorted.filter(d => (now - new Date(d).getTime())/86400000 <= 10).length;
+
+    let mult = 1;
+    if(restDays < 3) mult = 0.90;
+    else if(restDays < 4) mult = 0.95;
+    else if(restDays <= 9) mult = 1.02;
+    else if(restDays <= 14) mult = 1.0;
+    else mult = 0.97; // muito tempo parado, leve perda de ritmo
+
+    if(congestion >= 3) mult *= 0.96; // 3+ jogos em 10 dias: desgaste extra
+
+    return { mult: clamp(mult, 0.86, 1.04), restDays: Math.round(restDays), congestion };
+  }
+
+  /* ---------- PRESSÃO / JOGO DECISIVO -----------
+     Times "na faca" (brigando por classificação/vaga) tendem a jogar mais
+     concentrados e cometer menos erros bobos — mas também travam mais
+     (menos gols). Modelamos isso como leve redução de erro defensivo e
+     leve aumento de cautela ofensiva quando o jogo é decisivo pra alguém. */
+  function stakesFactor(standingsProb, isKnockout){
+    if(isKnockout){
+      return { attackMult:0.97, defenseMult:0.97, cautious:true, note:"Eliminatória — decisão em jogo único aumenta a cautela" };
+    }
+    if(!standingsProb || !standingsProb.hRow) return { attackMult:1, defenseMult:1, cautious:false, note:null };
+    const { hRow, aRow, totalTeams } = standingsProb;
+    // zona de classificação estimada como top 2 (padrão fase de grupos) ou top 4 (ligas maiores)
+    const qualifyZone = totalTeams <= 6 ? 2 : Math.max(4, Math.round(totalTeams*0.4));
+    const nearZone = pos => Math.abs(pos - qualifyZone) <= 1;
+    const highStakes = nearZone(hRow.position) || nearZone(aRow.position);
+    if(!highStakes) return { attackMult:1, defenseMult:1, cautious:false, note:null };
+    return { attackMult:0.98, defenseMult:0.98, cautious:true, note:"Jogo com forte impacto na classificação — tendência a mais cautela" };
   }
 
   /* ---------- PREVISÃO PRINCIPAL ---------- */
@@ -1325,22 +1413,19 @@ const Predict = (function(){
     const rAway = eloFor(away.id, eloRatings, awayGlobal);
     const HFA = eloRatings.HFA;
 
-    // mando dinâmico
     const HOME_ADV = clamp(1.05 + (HFA/1000), 1.05, 1.22);
 
     let lambdaHome = leagueStats.avgHomeGoals * homeForm.attackHome * awayForm.defenseAway * HOME_ADV;
     let lambdaAway = leagueStats.avgAwayGoals * awayForm.attackAway * homeForm.defenseHome;
 
-    // ajuste Elo
     const eloDiff = (rHome+HFA) - rAway;
     const eloFactor = clamp(eloDiff/1100, -0.32, 0.32);
     lambdaHome *= (1 + eloFactor*0.45);
     lambdaAway *= (1 - eloFactor*0.45);
 
-    // mata-mata = mais truncado
     if(isKnockout){ lambdaHome *= 0.95; lambdaAway *= 0.95; }
 
-    // H2H com peso decrescente por recência
+    // ---- H2H com peso decrescente por recência ----
     const h2h = headToHead(home.id, away.id, matches);
     if(h2h.length){
       let hG=0, aG=0, w=0;
@@ -1358,7 +1443,7 @@ const Predict = (function(){
       lambdaAway = lambdaAway*(1-h2hWeight) + aAvg*h2hWeight;
     }
 
-    // forma recente (últimos 5) como ajuste fino
+    // ---- forma recente (últimos 5) como ajuste fino ----
     function formBoost(form){
       if(!form || !form.formSeq || !form.formSeq.length) return 1;
       const seq = form.formSeq.slice(-5);
@@ -1369,12 +1454,31 @@ const Predict = (function(){
     lambdaHome *= formBoost(homeForm);
     lambdaAway *= formBoost(awayForm);
 
+    // ---- NOVO: fadiga / congestionamento real de calendário ----
+    const now = Date.now();
+    const homeFatigue = fatigueFactor(homeForm.recentDates, now);
+    const awayFatigue = fatigueFactor(awayForm.recentDates, now);
+    lambdaHome *= homeFatigue.mult;
+    lambdaAway *= awayFatigue.mult;
+
+    // ---- NOVO: clean sheet / failed-to-score real, ajuste fino defensivo ----
+    if(homeForm.cleanSheetRate != null) lambdaAway *= clamp(1 - (homeForm.cleanSheetRate-0.28)*0.4, 0.85, 1.15);
+    if(awayForm.cleanSheetRate != null) lambdaHome *= clamp(1 - (awayForm.cleanSheetRate-0.22)*0.4, 0.85, 1.15);
+    if(homeForm.failedToScoreRate != null) lambdaHome *= clamp(1 - (homeForm.failedToScoreRate-0.22)*0.35, 0.85, 1.1);
+    if(awayForm.failedToScoreRate != null) lambdaAway *= clamp(1 - (awayForm.failedToScoreRate-0.28)*0.35, 0.85, 1.1);
+
     // limites realistas
     lambdaHome = clamp(lambdaHome, 0.25, 4.2);
     lambdaAway = clamp(lambdaAway, 0.20, 3.8);
 
-    // matriz de placares com Dixon-Coles
-    const RHO = estimateRho(leagueStats, isKnockout);
+    // ---- NOVO: pressão/jogo decisivo (aplicado depois de fixar a base, antes da grade) ----
+    const standingsProbPre = standingsWinProb(ctx.standings, home.id, away.id);
+    const stakes = stakesFactor(standingsProbPre, isKnockout);
+    lambdaHome *= stakes.attackMult;
+    lambdaAway *= stakes.attackMult;
+
+    // ---- ρ calibrado nos dados reais da competição (Dixon-Coles) ----
+    const RHO = calibratedRho(matches, leagueStats, isKnockout);
     const MAXG = 8;
     let grid = [];
     let pHomeP=0, pDrawP=0, pAwayP=0, pBTTS=0, pOver15=0, pOver25=0, pOver35=0;
@@ -1405,7 +1509,7 @@ const Predict = (function(){
     }
 
     const eloProb = eloWinProb(rHome, rAway, HFA);
-    const standingsProb = standingsWinProb(ctx.standings, home.id, away.id);
+    const standingsProb = standingsProbPre;
 
     // pesos do ensemble dinâmicos
     const dataPoints = homeForm.n + awayForm.n;
@@ -1421,7 +1525,6 @@ const Predict = (function(){
     const sumP = pHome+pDraw+pAway;
     pHome/=sumP; pDraw/=sumP; pAway/=sumP;
 
-    // concordância entre modelos
     function favOf(h,d,a){ return h>=d && h>=a ? "HOME" : (a>=d && a>=h ? "AWAY" : "DRAW"); }
     const pFav = favOf(pHomeP,pDrawP,pAwayP);
     const eFav = favOf(eloProb.pHome,eloProb.pDraw,eloProb.pAway);
@@ -1433,35 +1536,42 @@ const Predict = (function(){
     const modelsAgreeAll = agreementCount === allFavs.length;
     const maxProb = Math.max(pHome,pDraw,pAway);
 
-    // confiança calibrada
-    let confidence = 28
-      + clamp(dataPoints,0,25)*2.0
-      + (maxProb-0.34)*110
-      + (modelsAgree?9:-7)
-      + (modelsAgreeAll?5:0)
+    // ---- confiança calibrada (com penalização extra de overconfidence) ----
+    let confidence = 26
+      + clamp(dataPoints,0,25)*1.9
+      + (maxProb-0.34)*105
+      + (modelsAgree?8:-8)
+      + (modelsAgreeAll?4:0)
       + (Math.abs(rHome+HFA-rAway)/100)*4;
-    if(h2h.length) confidence += Math.min(h2h.length,5)*1.1;
+    if(h2h.length) confidence += Math.min(h2h.length,5)*1.0;
     if(standingsProb) confidence += 2;
-    // penaliza se a forma recente contradiz a previsão
     if(homeForm.formSeq && awayForm.formSeq){
       const hLast = homeForm.formSeq[homeForm.formSeq.length-1];
       const aLast = awayForm.formSeq[awayForm.formSeq.length-1];
       if(hLast === "L" && finalFav === "HOME") confidence -= 3;
       if(aLast === "L" && finalFav === "AWAY") confidence -= 3;
     }
-    confidence = Math.round(clamp(confidence, 22, 97));
+    // amostra pequena ou variância alta na liga = mais incerteza, admitida com clareza
+    if(dataPoints < 6) confidence -= 6;
+    if(leagueStats.varTotal > 3.2) confidence -= 3;
+    if(stakes.cautious) confidence -= 2; // jogos tensos são mais imprevisíveis, não menos
+    confidence = Math.round(clamp(confidence, 20, 90)); // teto em 90: nunca finge certeza absoluta
 
     // fatores explicativos
     const factors = [];
     factors.push({ name:"Rating Elo (casa × fora)", val: Math.round(rHome)+" × "+Math.round(rAway)+(HFA?(" · mando +"+Math.round(HFA)):""), positive:(rHome+HFA)>=rAway });
     factors.push({ name:"Concordância entre modelos", val: modelsAgreeAll ? "Todos os modelos apontam o mesmo favorito" : (modelsAgree ? "Poisson e Elo concordam" : "Modelos divergem — mais incerteza"), positive:modelsAgree });
     factors.push({ name:"Força ajustada por adversário (SOS)", val:"Ataque/defesa recalculados considerando a força de quem cada time enfrentou", positive:true });
-    factors.push({ name:"Correlação Dixon-Coles (ρ)", val: RHO.toFixed(3)+(isKnockout?" · ajustado para mata-mata":""), positive:true });
+    factors.push({ name:"Correlação Dixon-Coles (ρ)", val: RHO.toFixed(3)+" · calibrado nos placares reais da competição"+(isKnockout?" (ajuste extra p/ mata-mata)":""), positive:true });
     factors.push({ name:"Amostra ("+(home.shortName||home.name)+")", val: homeForm.n+" na competição"+(homeForm.globalN?(" + "+homeForm.globalN+" globais"):""), positive:homeForm.n>0 });
     factors.push({ name:"Amostra ("+(away.shortName||away.name)+")", val: awayForm.n+" na competição"+(awayForm.globalN?(" + "+awayForm.globalN+" globais"):""), positive:awayForm.n>0 });
     if(homeForm.winRate!=null) factors.push({ name:`Forma recente (${home.shortName||home.name})`, val:(homeForm.winRate*100).toFixed(0)+"% vitórias ("+homeForm.formSeq.join("")+")", positive:homeForm.winRate>=0.5 });
     if(awayForm.winRate!=null) factors.push({ name:`Forma recente (${away.shortName||away.name})`, val:(awayForm.winRate*100).toFixed(0)+"% vitórias ("+awayForm.formSeq.join("")+")", positive:awayForm.winRate>=0.5 });
     factors.push({ name:"Mando de campo", val:"+"+Math.round((HOME_ADV-1)*100)+"% ataque + efeito Elo", positive:true });
+    if(homeFatigue.restDays!=null) factors.push({ name:`Descanso (${home.shortName||home.name})`, val: homeFatigue.restDays+" dias desde o último jogo"+(homeFatigue.congestion>=3?" · calendário apertado":""), positive: homeFatigue.mult>=1 });
+    if(awayFatigue.restDays!=null) factors.push({ name:`Descanso (${away.shortName||away.name})`, val: awayFatigue.restDays+" dias desde o último jogo"+(awayFatigue.congestion>=3?" · calendário apertado":""), positive: awayFatigue.mult>=1 });
+    if(homeForm.cleanSheetRate!=null) factors.push({ name:`Solidez defensiva (${home.shortName||home.name})`, val: Math.round(homeForm.cleanSheetRate*100)+"% de jogos sem sofrer gol", positive:homeForm.cleanSheetRate>=0.28 });
+    if(awayForm.cleanSheetRate!=null) factors.push({ name:`Solidez defensiva (${away.shortName||away.name})`, val: Math.round(awayForm.cleanSheetRate*100)+"% de jogos sem sofrer gol", positive:awayForm.cleanSheetRate>=0.22 });
     factors.push({ name:`Ataque (${home.shortName||home.name})`, val: Math.round(homeForm.attackHome*100)+"% da média", positive:homeForm.attackHome>=1 });
     factors.push({ name:`Ataque (${away.shortName||away.name})`, val: Math.round(awayForm.attackAway*100)+"% da média", positive:awayForm.attackAway>=1 });
     factors.push({ name:`Defesa (${home.shortName||home.name})`, val: Math.round((2-homeForm.defenseHome)*100)+"% (quanto maior, melhor)", positive:homeForm.defenseHome<=1 });
@@ -1471,12 +1581,14 @@ const Predict = (function(){
       if(hPos && aPos) factors.push({ name:"Posição na tabela", val:`${hPos}º × ${aPos}º`, positive:hPos<aPos });
     }
     if(standingsProb) factors.push({ name:"Modelo de classificação (pts/jogo)", val: standingsProb.hPPG.toFixed(2)+" × "+standingsProb.aPPG.toFixed(2)+" pts/jogo", positive:standingsProb.hPPG>=standingsProb.aPPG });
+    if(stakes.note) factors.push({ name:"Pressão do confronto", val: stakes.note, positive:false });
     if(isKnockout) factors.push({ name:"Fase eliminatória", val:"Gols esperados reduzidos ~5% (jogos mais truncados)", positive:true });
     if(h2h.length) factors.push({ name:"Confrontos diretos", val:h2h.length+" jogo(s) considerado(s) com recência", positive:true });
     factors.push({ name:"Pesos do ensemble", val: "Poisson "+Math.round(poissonWeight*100)+"% · Elo "+Math.round(eloWeight*100)+"%"+(standingsProb?(" · Tabela "+Math.round(standingsWeight*100)+"%"):""), positive:true });
     if(homeForm.n===0 && awayForm.n===0 && homeForm.globalN===0 && awayForm.globalN===0){
       factors.push({ name:"Aviso", val:"Sem histórico — previsão baseada nas médias da competição", positive:false });
     }
+    if(dataPoints < 6) factors.push({ name:"Aviso de amostra", val:"Poucos jogos disputados ainda — confiança reduzida de propósito", positive:false });
 
     return {
       pHome, pDraw, pAway, pBTTS, pOver15, pOver25, pOver35, pUnder25: 1-pOver25,
@@ -1490,6 +1602,8 @@ const Predict = (function(){
       standingsProbs: standingsProb,
       ensembleWeights:{ poisson: poissonWeight, elo: eloWeight, standings: standingsWeight },
       rho: RHO, isKnockout,
+      fatigue:{ home: homeFatigue, away: awayFatigue },
+      stakes,
     };
   }
 
