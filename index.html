@@ -41,11 +41,13 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{color-scheme:dark}
 [data-theme="light"] html{color-scheme:light}
+html,body{max-width:100%;overflow-x:hidden}
 body{
   background:var(--bg-0); color:var(--text-0); font-family:var(--font-body);
   font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
   min-height:100vh; transition:background .25s var(--ease),color .25s var(--ease);
 }
+body.modal-open{overflow:hidden;position:fixed;inset:0;width:100%}
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -59,8 +61,8 @@ ul{list-style:none}
 .mono{font-family:var(--font-mono)}
 .hidden{display:none !important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-.app-shell{min-height:100vh;display:flex;flex-direction:column}
-.container{max-width:var(--maxw);margin:0 auto;padding:0 var(--sp-5);width:100%}
+.app-shell{min-height:100vh;display:flex;flex-direction:column;max-width:100%;overflow-x:hidden}
+.container{max-width:var(--maxw);margin:0 auto;padding:0 var(--sp-5);width:100%;box-sizing:border-box}
 .site-header .container{
   max-width: none;
   padding: 0 var(--sp-5);
@@ -197,7 +199,7 @@ ul{list-style:none}
 .chip.scheduled{background:var(--blue,#4f8ef0);background:color-mix(in srgb, var(--blue) 16%, transparent);color:var(--blue)}
 .chip.gold{background:var(--gold-bg);color:var(--gold)}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-.view{padding:var(--sp-6) 0 var(--sp-7)}
+.view{padding:var(--sp-6) 0 var(--sp-7);max-width:100%;overflow-x:hidden}
 .view-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-5);flex-wrap:wrap}
 .view-title{font-family:var(--font-display);font-size:1.9rem;font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
 .view-sub{color:var(--text-2);font-size:.85rem;margin-top:2px}
@@ -211,7 +213,7 @@ ul{list-style:none}
   display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
   background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--sp-6);
 }
-.hero-cell{background:var(--bg-1);padding:var(--sp-4) var(--sp-5)}
+.hero-cell{background:var(--bg-1);padding:var(--sp-4) var(--sp-5);min-width:0}
 .hero-cell .lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);font-weight:700;margin-bottom:6px}
 .hero-cell .val{font-family:var(--font-mono);font-size:1.6rem;font-weight:700}
 .hero-cell .val.live{color:var(--live)}
@@ -220,10 +222,13 @@ ul{list-style:none}
 .countdown .seg{text-align:center}
 .countdown .seg b{display:block;font-family:var(--font-mono);font-size:1.4rem}
 .countdown .seg span{font-size:.6rem;color:var(--text-2);text-transform:uppercase}
-.grid{display:grid;gap:var(--sp-3)}
+.grid{display:grid;gap:var(--sp-3);max-width:100%}
 .grid-3{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
 .grid-2{grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
 .grid-4{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+@media (max-width:480px){
+  .grid-3,.grid-2,.grid-4{grid-template-columns:1fr}
+}
 .empty-state{
   border:1px dashed var(--line);border-radius:var(--radius-lg);padding:var(--sp-6);text-align:center;
   color:var(--text-2);font-size:.85rem;
@@ -233,30 +238,31 @@ ul{list-style:none}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .match-card{
   background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);
-  padding:var(--sp-4);cursor:pointer;transition:.18s var(--ease);position:relative;overflow:hidden;
+  padding:var(--sp-4);cursor:pointer;transition:.18s var(--ease);position:relative;overflow:hidden;min-width:0;
 }
 .match-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .match-card:focus-visible{border-color:var(--gold)}
-.match-card .mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3);font-size:.68rem;color:var(--text-2)}
-.match-card .mc-comp{text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.match-card .mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3);font-size:.68rem;color:var(--text-2);gap:var(--sp-2)}
+.match-card .mc-comp{text-transform:uppercase;letter-spacing:.05em;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mc-teams{display:flex;flex-direction:column;gap:var(--sp-2)}
-.mc-team{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
-.mc-team-name{display:flex;align-items:center;gap:var(--sp-2);font-weight:600;font-size:.92rem}
+.mc-team{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);min-width:0}
+.mc-team-name{display:flex;align-items:center;gap:var(--sp-2);font-weight:600;font-size:.92rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .crest{width:22px;height:22px;border-radius:50%;background:var(--bg-3);object-fit:contain;flex:none}
 .crest-fallback{width:22px;height:22px;border-radius:50%;background:var(--bg-3);display:grid;place-items:center;font-size:.6rem;font-weight:800;color:var(--text-2);flex:none}
-.mc-score{font-family:var(--font-mono);font-weight:700;font-size:1.05rem}
+.mc-score{font-family:var(--font-mono);font-weight:700;font-size:1.05rem;flex:none}
 .mc-team.winner .mc-team-name{color:var(--gold)}
 .mc-team.winner .mc-score{color:var(--gold)}
-.mc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line-soft)}
-.mc-meta{font-size:.7rem;color:var(--text-2)}
-.fav-star{color:var(--text-2);transition:.15s}
+.mc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line-soft);gap:var(--sp-2)}
+.mc-meta{font-size:.7rem;color:var(--text-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fav-star{color:var(--text-2);transition:.15s;flex:none}
 .fav-star.is-fav{color:var(--gold)}
 .fav-star:hover{color:var(--gold)}
-.tab-row{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin-bottom:var(--sp-4);overflow-x:auto}
-.tab-btn{padding:var(--sp-2) var(--sp-4);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
+.tab-row{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin-bottom:var(--sp-4);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:100%}
+.tab-row::-webkit-scrollbar{display:none}
+.tab-btn{padding:var(--sp-2) var(--sp-4);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap;flex:none}
 .tab-btn.active{color:var(--gold);border-color:var(--gold)}
 .filter-row{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-5);align-items:flex-end}
-.select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;font-size:.78rem;color:var(--text-0)}
+.select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;font-size:.78rem;color:var(--text-0);max-width:100%}
 .table{width:100%;border-collapse:collapse;font-size:.82rem}
 .table th{text-align:left;padding:8px 10px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2);border-bottom:1px solid var(--line)}
 .table td{padding:9px 10px;border-bottom:1px solid var(--line-soft)}
@@ -268,63 +274,71 @@ ul{list-style:none}
 .form-dots{display:flex;gap:3px}
 .form-dot{width:7px;height:7px;border-radius:50%}
 .form-dot.W{background:var(--live)} .form-dot.D{background:var(--text-2)} .form-dot.L{background:var(--red)}
+.table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .modal-overlay{
   position:fixed;inset:0;background:rgba(5,7,8,.7);backdrop-filter:blur(3px);z-index:200;
-  display:flex;align-items:flex-start;justify-content:center;padding:var(--sp-6) var(--sp-4);overflow-y:auto;
+  display:flex;align-items:flex-start;justify-content:center;padding:var(--sp-6) var(--sp-4);overflow-y:auto;overflow-x:hidden;
   opacity:0;pointer-events:none;transition:opacity .2s var(--ease);
+  -webkit-overflow-scrolling:touch;
 }
 .modal-overlay.open{opacity:1;pointer-events:auto}
 .modal{
   background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);max-width:760px;width:100%;
   box-shadow:var(--shadow-lg);transform:translateY(12px);transition:transform .22s var(--ease);
+  min-width:0;box-sizing:border-box;overflow:hidden;
 }
 .modal-overlay.open .modal{transform:translateY(0)}
-.modal-head{padding:var(--sp-5);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-3)}
+.modal-head{padding:var(--sp-5);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-3);min-width:0}
+.modal-head > div:first-child{min-width:0;overflow:hidden}
 .modal-close{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:var(--text-2);flex:none}
 .modal-close:hover{background:var(--bg-2);color:var(--text-0)}
-.modal-body{padding:var(--sp-5)}
-.modal-scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-4);padding:var(--sp-5) 0;text-align:center}
-.modal-team{display:flex;flex-direction:column;align-items:center;gap:var(--sp-2)}
+.modal-body{padding:var(--sp-5);min-width:0;max-width:100%;overflow-x:hidden;box-sizing:border-box}
+.modal-scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-3);padding:var(--sp-5) 0;text-align:center}
+.modal-team{display:flex;flex-direction:column;align-items:center;gap:var(--sp-2);min-width:0}
 .modal-team .crest,.modal-team .crest-fallback{width:52px;height:52px;font-size:1rem}
-.modal-team-name{font-weight:700;font-size:.95rem}
-.modal-score-big{font-family:var(--font-mono);font-size:2.6rem;font-weight:800;display:flex;align-items:center;gap:var(--sp-2)}
-.modal-tabs{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin:var(--sp-4) 0}
-.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
-.info-item{background:var(--bg-2);border-radius:var(--radius-md);padding:var(--sp-3)}
+.modal-team-name{font-weight:700;font-size:.95rem;overflow-wrap:break-word;word-break:break-word}
+.modal-score-big{font-family:var(--font-mono);font-size:2.6rem;font-weight:800;display:flex;align-items:center;gap:var(--sp-2);white-space:nowrap}
+.modal-tabs{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);margin:var(--sp-4) 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:100%}
+.modal-tabs::-webkit-scrollbar{display:none}
+.modal-tabs .tab-btn{flex:none}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--sp-3);margin-top:var(--sp-4);max-width:100%}
+.info-item{background:var(--bg-2);border-radius:var(--radius-md);padding:var(--sp-3);min-width:0}
 .info-item .lbl{font-size:.62rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.05em;margin-bottom:3px}
-.info-item .val{font-size:.85rem;font-weight:600}
-.timeline{display:flex;flex-direction:column;gap:0;margin-top:var(--sp-4)}
-.tl-event{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--line-soft);font-size:.82rem}
+.info-item .val{font-size:.85rem;font-weight:600;overflow-wrap:break-word}
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:var(--sp-4);max-width:100%}
+.tl-event{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--line-soft);font-size:.82rem;min-width:0}
+.tl-event span:nth-child(3){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tl-min{font-family:var(--font-mono);color:var(--gold);font-weight:700;width:38px;flex:none;text-align:right}
 .tl-icon{width:18px;flex:none;text-align:center}
-.predict-card{background:var(--bg-1);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:var(--sp-5);position:relative;overflow:hidden}
+.predict-card{background:var(--bg-1);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:var(--sp-5);position:relative;overflow:hidden;max-width:100%;box-sizing:border-box}
 .predict-card::before{content:"IA";position:absolute;top:-6px;right:10px;font-family:var(--font-display);font-size:4.5rem;font-weight:900;color:var(--gold-bg);line-height:1;user-select:none}
 .predict-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:var(--sp-2)}
 .confidence{display:flex;align-items:center;gap:8px}
 .confidence b{font-family:var(--font-mono);color:var(--gold);font-size:1.1rem}
 .prob-bars{display:flex;flex-direction:column;gap:var(--sp-3);margin-bottom:var(--sp-4)}
-.prob-row{display:grid;grid-template-columns:90px 1fr 48px;align-items:center;gap:var(--sp-3);font-size:.8rem}
+.prob-row{display:grid;grid-template-columns:minmax(60px,90px) 1fr 44px;align-items:center;gap:var(--sp-2);font-size:.8rem}
+.prob-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .prob-track{height:8px;background:var(--bg-3);border-radius:6px;overflow:hidden}
 .prob-fill{height:100%;border-radius:6px;transition:width .6s var(--ease-out,ease)}
 .prob-fill.home{background:var(--grad-gold)}
 .prob-fill.draw{background:var(--text-2)}
 .prob-fill.away{background:var(--blue)}
-.predict-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3);margin-bottom:var(--sp-4)}
-.predict-stat{background:var(--bg-2);border-radius:var(--radius-md);padding:var(--sp-3);text-align:center}
+.predict-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sp-3);margin-bottom:var(--sp-4);max-width:100%}
+.predict-stat{background:var(--bg-2);border-radius:var(--radius-md);padding:var(--sp-3);text-align:center;min-width:0}
 .predict-stat b{display:block;font-family:var(--font-mono);font-size:1.3rem;color:var(--gold)}
 .predict-stat span{font-size:.65rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.04em}
 .factors{display:flex;flex-direction:column;gap:6px}
-.factor{display:flex;justify-content:space-between;font-size:.78rem;padding:7px 10px;background:var(--bg-2);border-radius:var(--radius-sm)}
-.factor .f-name{color:var(--text-1)}
-.factor .f-val{font-family:var(--font-mono);font-weight:700}
+.factor{display:flex;justify-content:space-between;font-size:.78rem;padding:7px 10px;background:var(--bg-2);border-radius:var(--radius-sm);gap:var(--sp-2)}
+.factor .f-name{color:var(--text-1);min-width:0}
+.factor .f-val{font-family:var(--font-mono);font-weight:700;flex:none}
 .factor .f-val.pos{color:var(--live)}
 .factor .f-val.neg{color:var(--red)}
-.score-grid-wrap{overflow-x:auto;margin-top:var(--sp-2)}
+.score-grid-wrap{overflow-x:auto;margin-top:var(--sp-2);-webkit-overflow-scrolling:touch;max-width:100%}
 .score-grid{border-collapse:collapse;font-size:.68rem}
 .score-grid td,.score-grid th{padding:4px 6px;text-align:center;font-family:var(--font-mono)}
 .score-grid th{color:var(--text-2);font-weight:700}
 .score-grid td{border:1px solid var(--line-soft);min-width:30px}
-.bracket{display:flex;gap:var(--sp-6);overflow-x:auto;padding-bottom:var(--sp-4)}
+.bracket{display:flex;gap:var(--sp-6);overflow-x:auto;padding-bottom:var(--sp-4);-webkit-overflow-scrolling:touch;max-width:100%}
 .bracket-round{display:flex;flex-direction:column;justify-content:space-around;gap:var(--sp-4);min-width:220px}
 .bracket-round-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);font-weight:700;text-align:center;margin-bottom:var(--sp-2)}
 .bracket-match{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;cursor:pointer;transition:.15s}
@@ -332,25 +346,34 @@ ul{list-style:none}
 .bm-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;font-size:.76rem;gap:6px}
 .bm-row:first-child{border-bottom:1px solid var(--line-soft)}
 .bm-row.win{color:var(--gold);font-weight:700;background:var(--gold-bg)}
-.bm-team{display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bm-score{font-family:var(--font-mono)}
-.chart-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4)}
-.chart-card canvas{width:100%;display:block}
+.bm-team{display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bm-score{font-family:var(--font-mono);flex:none}
+.chart-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4);max-width:100%;box-sizing:border-box;min-width:0}
+.chart-card canvas{width:100%;display:block;max-width:100%}
 .legend{display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:var(--sp-3);font-size:.72rem;color:var(--text-1)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
-.guess-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
-.field{display:flex;flex-direction:column;gap:5px}
+.guess-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--sp-3);margin-top:var(--sp-4);max-width:100%}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field label{font-size:.66rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.04em;font-weight:700}
-.field input,.field select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;font-size:.85rem}
+.field input,.field select{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;font-size:.85rem;width:100%;box-sizing:border-box}
 .field input:focus,.field select:focus{border-color:var(--gold)}
+.field .hint{font-size:.64rem;color:var(--text-2);margin-top:2px}
 .score-input{display:flex;align-items:center;gap:var(--sp-2)}
 .score-input input{width:54px;text-align:center;font-family:var(--font-mono);font-size:1.1rem}
 .guess-result{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-3);border-radius:var(--radius-md);margin-top:var(--sp-3);font-size:.82rem}
 .guess-result.hit{background:var(--live-bg);color:var(--live)}
+.guess-result.partial{background:var(--gold-bg);color:var(--gold)}
 .guess-result.miss{background:var(--red-bg);color:var(--red)}
+.guess-breakdown{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.guess-breakdown .gb-row{display:flex;justify-content:space-between;font-size:.76rem;padding:6px 10px;background:var(--bg-2);border-radius:var(--radius-sm);gap:var(--sp-2)}
+.guess-breakdown .gb-row span:first-child{color:var(--text-1);min-width:0}
+.guess-breakdown .gb-row b{flex:none}
+.guess-breakdown .gb-row b.ok{color:var(--live)}
+.guess-breakdown .gb-row b.fail{color:var(--red)}
+.guess-breakdown .gb-row b.na{color:var(--text-2)}
 .stat-banner{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--sp-5)}
-.stat-banner .cell{background:var(--bg-1);padding:var(--sp-4);text-align:center}
+.stat-banner .cell{background:var(--bg-1);padding:var(--sp-4);text-align:center;min-width:0}
 .stat-banner .cell b{display:block;font-family:var(--font-mono);font-size:1.7rem;color:var(--gold)}
 .stat-banner .cell span{font-size:.65rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.05em}
 .toast-stack{position:fixed;bottom:var(--sp-5);right:var(--sp-5);z-index:300;display:flex;flex-direction:column;gap:var(--sp-2);max-width:320px}
@@ -376,6 +399,9 @@ ul{list-style:none}
   .modal-score-big{justify-content:center}
   .nav-link{font-size:.66rem}
   .hero-cell{padding:var(--sp-3)}
+  .modal-overlay{padding:0}
+  .modal{max-width:100%;width:100%;border-radius:0;min-height:100dvh}
+  .modal-body{padding:var(--sp-4)}
 }
 .fade-in{animation:fadeIn .35s var(--ease) both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -389,22 +415,22 @@ ul{list-style:none}
 .comp-tab.active{background:var(--gold);color:#1a1306;border-color:var(--gold)}
 .comp-tab .count{opacity:.7;margin-left:4px}
 .search-results{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;max-height:340px;overflow-y:auto}
-.search-result-row{background:var(--bg-1);display:flex;align-items:center;gap:var(--sp-3);padding:9px 12px}
-.search-result-row .name{flex:1;font-size:.85rem;font-weight:600}
-.add-fav-btn{padding:5px 11px;font-size:.66rem}
+.search-result-row{background:var(--bg-1);display:flex;align-items:center;gap:var(--sp-3);padding:9px 12px;min-width:0}
+.search-result-row .name{flex:1;font-size:.85rem;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.add-fav-btn{padding:5px 11px;font-size:.66rem;flex:none}
 .add-fav-btn.added{background:var(--live-bg);color:var(--live);border-color:var(--live)}
-.quick-guess-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4)}
-.vs-row{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:.9rem;margin-bottom:var(--sp-3)}
+.quick-guess-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--sp-4);max-width:100%;box-sizing:border-box}
+.vs-row{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:.9rem;margin-bottom:var(--sp-3);flex-wrap:wrap}
 .vs-row .vs{color:var(--text-2);font-weight:400;font-size:.7rem;text-transform:uppercase}
-.analysis-toolbar{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--sp-5);padding:var(--sp-4);background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg)}
-.analysis-toolbar .field{margin:0;min-width:140px}
+.analysis-toolbar{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--sp-5);padding:var(--sp-4);background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-lg);max-width:100%;box-sizing:border-box}
+.analysis-toolbar .field{margin:0;min-width:140px;flex:1 1 140px}
 .kpi-delta{font-size:.7rem;font-weight:700}
 .kpi-delta.pos{color:var(--live)} .kpi-delta.neg{color:var(--red)}
-.h2h-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:.8rem}
-.player-row{display:flex;align-items:center;gap:var(--sp-3);padding:9px 4px;border-bottom:1px solid var(--line-soft);font-size:.82rem}
-.player-row .rank{width:22px;font-family:var(--font-mono);color:var(--text-2);text-align:center}
-.player-row .pname{flex:1;font-weight:600}
-.player-row .pgoals{font-family:var(--font-mono);font-weight:700;color:var(--gold)}
+.h2h-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:.8rem;gap:var(--sp-2)}
+.player-row{display:flex;align-items:center;gap:var(--sp-3);padding:9px 4px;border-bottom:1px solid var(--line-soft);font-size:.82rem;min-width:0}
+.player-row .rank{width:22px;font-family:var(--font-mono);color:var(--text-2);text-align:center;flex:none}
+.player-row .pname{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-row .pgoals{font-family:var(--font-mono);font-weight:700;color:var(--gold);flex:none}
 .match-picker{display:flex;flex-direction:column;gap:var(--sp-2);max-height:280px;overflow-y:auto;margin-top:var(--sp-3)}
 .match-pick-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:9px 12px;background:var(--bg-2);border-radius:var(--radius-sm);font-size:.8rem}
 .match-pick-row:hover{background:var(--bg-3);cursor:pointer}
@@ -827,7 +853,7 @@ const Favorites = (function(){
 })();
 
 /* =====================================================================
-   7. GUESSES
+   7. GUESSES  (sistema de palpites — reformulado)
    ===================================================================== */
 const Guesses = (function(){
   function all(){ return Store.get("guesses", {}); }
@@ -839,23 +865,65 @@ const Guesses = (function(){
   function get(matchId){ return all()[matchId] || null; }
   function remove(matchId){ const g = all(); delete g[matchId]; Store.set("guesses", g); }
 
+  // Avalia o palpite completo contra o resultado real, considerando:
+  // - placar exato (peso maior)
+  // - resultado (vencedor/empate) — só pontua separado se NÃO acertou o placar exato
+  // - quem faz o primeiro gol (se a API tiver o dado de gols do jogo)
+  // - total de cartões (se a API tiver o dado de cartões do jogo)
+  // Escanteios e "craque da partida" ficam registrados mas não são conferidos
+  // automaticamente: a API gratuita do football-data.org não fornece esses dados.
   function evaluate(matchId, match){
     const g = get(matchId);
-    if(!g || g.checked) return g;
+    if(!g) return g;
     if(match.status !== "FINISHED") return g;
+    if(g.checked) return g;
+
     const realHome = match.score.fullTime.home, realAway = match.score.fullTime.away;
+    const guessHome = Number(g.home), guessAway = Number(g.away);
     const hits = {};
-    hits.placarExato = (Number(g.home) === realHome && Number(g.away) === realAway);
+
+    hits.placarExato = (guessHome === realHome && guessAway === realAway);
     const realResult = realHome > realAway ? "HOME" : (realHome < realAway ? "AWAY" : "DRAW");
-    const guessResult = Number(g.home) > Number(g.away) ? "HOME" : (Number(g.home) < Number(g.away) ? "AWAY" : "DRAW");
+    const guessResult = guessHome > guessAway ? "HOME" : (guessHome < guessAway ? "AWAY" : "DRAW");
     hits.vencedor = realResult === guessResult;
-    if(g.corners !== undefined && g.corners !== "") hits.escanteios = null;
-    let score = 0, possible = 1;
-    if(hits.placarExato) score += 2; possible += 1;
-    if(hits.vencedor) score += 1;
-    g.checked = true; g.hits = hits; g.points = score; g.possible = possible + 1;
+
+    // primeiro gol
+    hits.primeiroGol = null;
+    if(g.firstGoal && g.firstGoal.trim()){
+      const goals = (match.goals||[]).slice().sort((a,b)=>(a.minute||0)-(b.minute||0));
+      const guessNorm = Utils.normalize(g.firstGoal);
+      const saysNinguem = ["ninguem","nenhum","0x0","nenhum time","empate sem gols"].includes(guessNorm);
+      if(!goals.length){
+        hits.primeiroGol = saysNinguem;
+      } else {
+        const scoringTeam = goals[0].team || {};
+        const label = Utils.normalize(scoringTeam.shortName || scoringTeam.name || "");
+        hits.primeiroGol = !!(label && guessNorm && (label.includes(guessNorm) || guessNorm.includes(label)));
+      }
+    }
+
+    // total de cartões (amarelos + vermelhos)
+    hits.cartoes = null;
+    if(g.cards !== undefined && g.cards !== "" && g.cards !== null){
+      const totalCards = (match.bookings||[]).length;
+      hits.cartoes = Number(g.cards) === totalCards;
+      g.cartoesReal = totalCards;
+    }
+
+    // pontuação estilo "bolão"
+    let points = 0, possible = 5; // placar exato vale 5
+    if(hits.placarExato) points += 5;
+    else { possible += 2; if(hits.vencedor) points += 2; } // resultado certo só soma se não foi placar exato
+    if(hits.primeiroGol !== null){ possible += 1; if(hits.primeiroGol) points += 1; }
+    if(hits.cartoes !== null){ possible += 1; if(hits.cartoes) points += 1; }
+
+    g.checked = true;
+    g.hits = hits;
+    g.points = points;
+    g.possible = possible;
+    g.realScore = { home: realHome, away: realAway };
     const all_ = all(); all_[matchId] = g; Store.set("guesses", all_);
-    updateStreak(hits.vencedor);
+    updateStreak(hits.placarExato || hits.vencedor);
     return g;
   }
 
@@ -865,17 +933,25 @@ const Guesses = (function(){
     Store.set("streak", s);
   }
 
+  function resultTier(g){
+    if(!g || !g.checked) return "pending";
+    if(g.hits.placarExato) return "exact";
+    if(g.hits.vencedor) return "partial";
+    return "miss";
+  }
+
   function stats(){
     const g = all();
     const checked = Object.values(g).filter(x => x.checked);
     const correct = checked.filter(x => x.hits && x.hits.vencedor).length;
     const exact = checked.filter(x => x.hits && x.hits.placarExato).length;
     const pct = checked.length ? Math.round((correct/checked.length)*100) : 0;
+    const totalPoints = checked.reduce((s,x)=>s+(x.points||0),0);
     const streak = Store.get("streak", { current:0, best:0 });
-    return { total: Object.keys(g).length, checked: checked.length, correct, exact, pct, streak };
+    return { total: Object.keys(g).length, checked: checked.length, correct, exact, pct, streak, totalPoints };
   }
 
-  return { all, save, get, remove, evaluate, stats };
+  return { all, save, get, remove, evaluate, resultTier, stats };
 })();
 
 /* =====================================================================
@@ -962,7 +1038,36 @@ const Notify = (function(){
 })();
 
 /* =====================================================================
-   9. PREDICT
+   9. PREDICT — modelo estatístico avançado
+   Combina três técnicas complementares, cada uma cobrindo os pontos
+   fracos das outras:
+
+   1) Modelo de placar (Poisson bivariado + correção Dixon-Coles)
+      → estima gols esperados de cada time via força de ataque/defesa
+        com ponderação por recência (decaimento exponencial) e
+        encolhimento Bayesiano (shrinkage) para não superestimar times
+        com poucos jogos disputados.
+
+   2) Rating Elo dinâmico com fator de gols (margin-of-victory)
+      → recalculado a partir de TODOS os jogos já disputados na
+        competição, propagando informação por toda a "rede" de
+        confrontos (não só os jogos do próprio time). Isso é
+        especialmente valioso logo no início de um torneio, quando um
+        time pode ter jogado 0 ou 1 partida.
+
+   3) Prior de forma global (fora da competição atual)
+      → quando o time ainda tem poucos jogos na Copa, o modelo busca
+        o histórico recente do time em QUALQUER competição (todos os
+        jogos passados disponíveis via API) para estimar sua força
+        antes mesmo da estreia, evitando previsões "cegas" baseadas
+        apenas na média da competição.
+
+   O resultado final (vitória/empate/derrota) é um ensemble ponderado
+   entre o modelo de Poisson e o modelo de Elo — o peso de cada um
+   se ajusta automaticamente à quantidade de dados disponível. O
+   placar mais provável e o mapa de probabilidades de placar continuam
+   vindo da distribuição de Poisson (mais precisa para isso), mas
+   agora calibrada com gols esperados mais robustos.
    ===================================================================== */
 const Predict = (function(){
   function poisson(lambda, k){
@@ -970,84 +1075,169 @@ const Predict = (function(){
   }
   function factorial(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
 
-  function teamForm(teamId, finishedMatches){
-    const played = finishedMatches.filter(m => m.status === "FINISHED" && (m.homeTeam.id===teamId || m.awayTeam.id===teamId));
-    if(played.length === 0) return null;
-    let gf=0, ga=0, w=0,d=0,l=0;
-    const formSeq = [];
-    played.slice(-6).forEach(m => {
+  // Ajuste de Dixon-Coles para corrigir a subestimação de placares baixos
+  // que o Poisson puro comete (rho negativo é o valor típico observado em ligas reais).
+  function tau(x,y,lambda,mu,rho){
+    if(x===0 && y===0) return 1 - (lambda*mu*rho);
+    if(x===0 && y===1) return 1 + (lambda*rho);
+    if(x===1 && y===0) return 1 + (mu*rho);
+    if(x===1 && y===1) return 1 - rho;
+    return 1;
+  }
+
+  function buildLeagueStats(matches){
+    const finished = matches.filter(m => m.status === "FINISHED");
+    let homeGoals = 0, awayGoals = 0;
+    finished.forEach(m => { homeGoals += (m.score.fullTime.home||0); awayGoals += (m.score.fullTime.away||0); });
+    const n = finished.length || 1;
+    return {
+      avgHomeGoals: finished.length ? homeGoals/n : 1.45,
+      avgAwayGoals: finished.length ? awayGoals/n : 1.15,
+      n: finished.length,
+    };
+  }
+
+  /* ---------------- ELO ---------------- */
+  // Calcula ratings Elo de todos os times a partir do histórico completo de jogos
+  // finalizados fornecido, com fator K ajustado pela diferença de gols (goleadas
+  // pesam mais) e vantagem de mando estimada dinamicamente a partir dos próprios
+  // dados (saldo de gols médio em casa), em vez de um valor fixo arbitrário.
+  function computeEloRatings(matches){
+    const finished = matches.filter(m => m.status === "FINISHED").slice().sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+    const ratings = {};
+    const K_BASE = 32;
+    function getR(id){ return ratings[id] !== undefined ? ratings[id] : 1500; }
+
+    let homeGoalSupremacy = 0;
+    if(finished.length){
+      homeGoalSupremacy = finished.reduce((s,m)=> s + ((m.score.fullTime.home||0)-(m.score.fullTime.away||0)), 0) / finished.length;
+    }
+    const HFA = Utils.clamp(homeGoalSupremacy * 60, 0, 90); // saldo médio de gols convertido em pontos de Elo
+
+    finished.forEach(m => {
+      const hId = m.homeTeam.id, aId = m.awayTeam.id;
+      const hR = getR(hId), aR = getR(aId);
+      const hGoals = m.score.fullTime.home||0, aGoals = m.score.fullTime.away||0;
+      const diff = hGoals - aGoals;
+      const expectedHome = 1/(1+Math.pow(10, -((hR+HFA-aR)/400)));
+      let actualHome;
+      if(diff>0) actualHome = 1; else if(diff<0) actualHome = 0; else actualHome = 0.5;
+      const gDiffAbs = Math.abs(diff);
+      const G = gDiffAbs<=1 ? 1 : (gDiffAbs===2 ? 1.5 : (11+gDiffAbs)/8);
+      const K = K_BASE * G;
+      const delta = K*(actualHome-expectedHome);
+      ratings[hId] = hR + delta;
+      ratings[aId] = aR - delta;
+    });
+    return { ratings, HFA };
+  }
+
+  // Estima uma probabilidade 1x2 a partir da diferença de rating Elo (com vantagem
+  // de mando embutida). A probabilidade de empate diminui conforme a diferença de
+  // força entre os times aumenta — heurística comum em modelos de Elo para futebol.
+  function eloWinProb(rHome, rAway, HFA){
+    const expectedHome = 1/(1+Math.pow(10, -((rHome+HFA-rAway)/400)));
+    const gap = Math.abs(rHome+HFA-rAway);
+    const drawProb = Utils.clamp(0.28 - gap/1500, 0.15, 0.28);
+    let pHome = Utils.clamp(expectedHome - drawProb/2, 0.02, 0.96);
+    let pAway = Utils.clamp((1-expectedHome) - drawProb/2, 0.02, 0.96);
+    let pDraw = Utils.clamp(1-pHome-pAway, 0.02, 0.9);
+    const sum = pHome+pDraw+pAway;
+    return { pHome:pHome/sum, pDraw:pDraw/sum, pAway:pAway/sum };
+  }
+
+  // Extrai taxas brutas (não normalizadas) de gols feitos/sofridos em casa e fora,
+  // com ponderação por recência (jogos mais recentes pesam mais).
+  function rawStrength(teamId, matches){
+    const finished = matches
+      .filter(m => m.status === "FINISHED" && (m.homeTeam.id===teamId || m.awayTeam.id===teamId))
+      .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+    if(finished.length === 0) return null;
+    const DECAY = 0.90;
+    const N = finished.length;
+    let wins=0, draws=0, losses=0, formSeq=[];
+    let gfHomeW=0, gaHomeW=0, homeW=0, gfAwayW=0, gaAwayW=0, awayW=0, homeN=0, awayN=0;
+
+    finished.forEach((m, idx) => {
       const isHome = m.homeTeam.id === teamId;
       const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
       const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
-      gf += my; ga += opp;
-      if(my>opp){ w++; formSeq.push("W"); } else if(my<opp){ l++; formSeq.push("L"); } else { d++; formSeq.push("D"); }
+      const weight = Math.pow(DECAY, (N - 1 - idx));
+      if(my > opp){ wins++; formSeq.push("W"); } else if(my < opp){ losses++; formSeq.push("L"); } else { draws++; formSeq.push("D"); }
+      if(isHome){ gfHomeW += my*weight; gaHomeW += opp*weight; homeW += weight; homeN++; }
+      else { gfAwayW += my*weight; gaAwayW += opp*weight; awayW += weight; awayN++; }
     });
-    const n = played.slice(-6).length;
-    return { gfAvg: gf/n, gaAvg: ga/n, w,d,l, n, formSeq, winRate: w/n };
-  }
-
-  function predictMatch(home, away, ctx){
-    ctx = ctx || {};
-    const homeForm = teamForm(home.id, ctx.matches||[]);
-    const awayForm = teamForm(away.id, ctx.matches||[]);
-
-    const BASE = 1.35;
-    const HOME_ADV = 1.12;
-
-    let lambdaHome = BASE * HOME_ADV;
-    let lambdaAway = BASE;
-
-    if(homeForm) lambdaHome = (homeForm.gfAvg*0.65 + (awayForm? awayForm.gaAvg*0.35 : BASE*0.35)) * HOME_ADV;
-    if(awayForm) lambdaAway = (awayForm.gfAvg*0.65 + (homeForm? homeForm.gaAvg*0.35 : BASE*0.35));
-
-    if(ctx.standings){
-      const hPos = findPosition(ctx.standings, home.id);
-      const aPos = findPosition(ctx.standings, away.id);
-      if(hPos && aPos){
-        const diff = (aPos - hPos) / 16;
-        lambdaHome *= Utils.clamp(1 + diff*0.18, 0.6, 1.6);
-        lambdaAway *= Utils.clamp(1 - diff*0.18, 0.6, 1.6);
-      }
-    }
-    lambdaHome = Utils.clamp(lambdaHome, 0.25, 4.5);
-    lambdaAway = Utils.clamp(lambdaAway, 0.25, 4.5);
-
-    const MAXG = 6;
-    let grid = [];
-    let pHome=0, pDraw=0, pAway=0, pBTTS=0, pOver25=0;
-    let best = { h:0,a:0,p:0 };
-    for(let h=0; h<=MAXG; h++){
-      grid[h] = [];
-      for(let a=0; a<=MAXG; a++){
-        const p = poisson(lambdaHome,h) * poisson(lambdaAway,a);
-        grid[h][a] = p;
-        if(h>a) pHome += p; else if(h<a) pAway += p; else pDraw += p;
-        if(h>0 && a>0) pBTTS += p;
-        if(h+a > 2) pOver25 += p;
-        if(p > best.p) best = { h,a,p };
-      }
-    }
-    const total = pHome+pDraw+pAway;
-    pHome/=total; pDraw/=total; pAway/=total;
-
-    let dataPoints = (homeForm?homeForm.n:0) + (awayForm?awayForm.n:0);
-    let confidence = Utils.clamp(40 + dataPoints*5, 35, 92);
-    if(ctx.standings) confidence = Utils.clamp(confidence + 6, 35, 95);
-
-    const factors = [];
-    if(homeForm) factors.push({ name: `Forma recente de ${home.shortName||home.name}`, val: (homeForm.winRate*100).toFixed(0)+"% vitórias", positive: homeForm.winRate>=0.5 });
-    if(awayForm) factors.push({ name: `Forma recente de ${away.shortName||away.name}`, val: (awayForm.winRate*100).toFixed(0)+"% vitórias", positive: awayForm.winRate>=0.5 });
-    factors.push({ name:"Mando de campo", val:"+"+Math.round((HOME_ADV-1)*100)+"% ataque", positive:true });
-    if(homeForm) factors.push({ name:`Média de gols (${home.shortName||home.name})`, val: homeForm.gfAvg.toFixed(2)+"/jogo", positive: homeForm.gfAvg>=1.3 });
-    if(awayForm) factors.push({ name:`Média de gols (${away.shortName||away.name})`, val: awayForm.gfAvg.toFixed(2)+"/jogo", positive: awayForm.gfAvg>=1.3 });
-    if(!homeForm && !awayForm) factors.push({ name:"Histórico", val:"dados insuficientes — usando médias gerais", positive:false });
 
     return {
-      pHome, pDraw, pAway, pBTTS, pOver25, pUnder25: 1-pOver25,
-      expHome: lambdaHome, expAway: lambdaAway,
-      bestScore: best, confidence: Math.round(confidence), factors, grid,
-      homeForm, awayForm,
+      n:N, wins, draws, losses, winRate: wins/N, formSeq: formSeq.slice(-6),
+      attackHomeRate: homeW>0 ? gfHomeW/homeW : null, defenseHomeRate: homeW>0 ? gaHomeW/homeW : null,
+      attackAwayRate: awayW>0 ? gfAwayW/awayW : null, defenseAwayRate: awayW>0 ? gaAwayW/awayW : null,
+      homeN, awayN,
     };
+  }
+
+  // Força de ataque/defesa "blendada": combina os jogos do time NA competição atual
+  // com um prior extraído de jogos recentes do time em QUALQUER outra competição
+  // (histórico global), usando encolhimento Bayesiano em direção à média da liga.
+  // Isso resolve o principal ponto fraco do modelo anterior: no início de uma Copa
+  // do Mundo, a maioria dos times ainda não jogou nenhuma partida no torneio, e a
+  // previsão ficava presa às médias genéricas da competição.
+  function blendedStrength(teamId, inCompMatches, globalMatches, leagueStats){
+    const inComp = rawStrength(teamId, inCompMatches);
+    const global = rawStrength(teamId, globalMatches||[]);
+    const PSEUDO = 4;            // "jogos" de peso que a média da liga carrega no prior
+    const GLOBAL_DAMPING = 0.55; // jogos de outras competições contam menos que jogos da própria Copa
+
+    function combine(inRate, inW, globalRate, globalW, leagueAvg){
+      let num = leagueAvg*PSEUDO, den = PSEUDO;
+      if(globalRate!=null && globalW>0){ num += globalRate*globalW; den += globalW; }
+      if(inRate!=null && inW>0){ num += inRate*inW; den += inW; }
+      return num/den;
+    }
+
+    const inHomeN = inComp ? inComp.homeN : 0, inAwayN = inComp ? inComp.awayN : 0;
+    const gHomeN = global ? global.homeN*GLOBAL_DAMPING : 0, gAwayN = global ? global.awayN*GLOBAL_DAMPING : 0;
+
+    const attackHomeRate = combine(inComp&&inComp.attackHomeRate, inHomeN, global&&global.attackHomeRate, gHomeN, leagueStats.avgHomeGoals);
+    const defenseHomeRate = combine(inComp&&inComp.defenseHomeRate, inHomeN, global&&global.defenseHomeRate, gHomeN, leagueStats.avgAwayGoals);
+    const attackAwayRate = combine(inComp&&inComp.attackAwayRate, inAwayN, global&&global.attackAwayRate, gAwayN, leagueStats.avgAwayGoals);
+    const defenseAwayRate = combine(inComp&&inComp.defenseAwayRate, inAwayN, global&&global.defenseAwayRate, gAwayN, leagueStats.avgHomeGoals);
+
+    const winRate = inComp ? inComp.winRate : (global ? global.winRate : null);
+    const formSeq = inComp ? inComp.formSeq : (global ? global.formSeq : []);
+
+    return {
+      attackHome: Utils.clamp(attackHomeRate/leagueStats.avgHomeGoals, 0.3, 2.8),
+      defenseHome: Utils.clamp(defenseHomeRate/leagueStats.avgAwayGoals, 0.3, 2.8),
+      attackAway: Utils.clamp(attackAwayRate/leagueStats.avgAwayGoals, 0.3, 2.8),
+      defenseAway: Utils.clamp(defenseAwayRate/leagueStats.avgHomeGoals, 0.3, 2.8),
+      n: inComp ? inComp.n : 0,
+      globalN: global ? global.n : 0,
+      winRate, formSeq,
+    };
+  }
+
+  // Mantido para compatibilidade com os painéis de Estatísticas (Por time / Comparar times),
+  // que usam apenas os jogos da própria competição, sem o prior global.
+  function teamStrength(teamId, matches, leagueStats){
+    const s = rawStrength(teamId, matches);
+    if(!s) return null;
+    return {
+      gfAvg: (s.wins+s.draws+s.losses) ? undefined : undefined, // não usado diretamente
+      wins:s.wins, draws:s.draws, losses:s.losses, n:s.n, winRate:s.winRate, formSeq:s.formSeq,
+      attackHome: Utils.clamp((s.attackHomeRate ?? (leagueStats.avgHomeGoals))/(leagueStats.avgHomeGoals||1), 0.25, 3),
+      defenseHome: Utils.clamp((s.defenseHomeRate ?? (leagueStats.avgAwayGoals))/(leagueStats.avgAwayGoals||1), 0.25, 3),
+      attackAway: Utils.clamp((s.attackAwayRate ?? (leagueStats.avgAwayGoals))/(leagueStats.avgAwayGoals||1), 0.25, 3),
+      defenseAway: Utils.clamp((s.defenseAwayRate ?? (leagueStats.avgHomeGoals))/(leagueStats.avgHomeGoals||1), 0.25, 3),
+      gfAvg: s.n ? ((s.attackHomeRate||0)*s.homeN + (s.attackAwayRate||0)*s.awayN)/s.n : 0,
+      gaAvg: s.n ? ((s.defenseHomeRate||0)*s.homeN + (s.defenseAwayRate||0)*s.awayN)/s.n : 0,
+    };
+  }
+
+  function headToHead(homeId, awayId, matches){
+    return matches.filter(m => m.status==="FINISHED" && (
+      (m.homeTeam.id===homeId && m.awayTeam.id===awayId) || (m.homeTeam.id===awayId && m.awayTeam.id===homeId)
+    )).sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
   }
 
   function findPosition(standingsResp, teamId){
@@ -1059,8 +1249,164 @@ const Predict = (function(){
     }
     return null;
   }
+  function totalTeamsInStandings(standingsResp){
+    if(!standingsResp || !standingsResp.standings) return null;
+    const table = standingsResp.standings.find(t=>t.type==="TOTAL");
+    return table ? table.table.length : null;
+  }
 
-  return { predictMatch, teamForm };
+  function predictMatch(home, away, ctx){
+    ctx = ctx || {};
+    const matches = ctx.matches || [];
+    const homeGlobal = ctx.homeGlobalMatches || [];
+    const awayGlobal = ctx.awayGlobalMatches || [];
+    const leagueStats = buildLeagueStats(matches);
+
+    const homeForm = blendedStrength(home.id, matches, homeGlobal, leagueStats);
+    const awayForm = blendedStrength(away.id, matches, awayGlobal, leagueStats);
+
+    const { ratings: eloRatings, HFA } = computeEloRatings(matches);
+    // Se o time ainda não tem rating (0 jogos na competição), aproxima um rating
+    // inicial a partir do saldo de gols médio no histórico global recente —
+    // melhor do que assumir força "neutra" de largada para todo mundo.
+    function eloFor(teamId, globalMatches){
+      if(eloRatings[teamId] !== undefined) return eloRatings[teamId];
+      const finished = (globalMatches||[]).filter(m=>m.status==="FINISHED").slice(-10);
+      if(finished.length){
+        let diffSum = 0;
+        finished.forEach(m => {
+          const isHome = m.homeTeam.id===teamId;
+          const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+          const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
+          diffSum += (my-opp);
+        });
+        return 1500 + Utils.clamp((diffSum/finished.length)*40, -250, 250);
+      }
+      return 1500;
+    }
+    const rHome = eloFor(home.id, homeGlobal);
+    const rAway = eloFor(away.id, awayGlobal);
+
+    const HOME_ADV = 1.10; // vantagem de mando de campo aplicada sobre a força relativa
+    let lambdaHome = leagueStats.avgHomeGoals * homeForm.attackHome * awayForm.defenseAway * HOME_ADV;
+    let lambdaAway = leagueStats.avgAwayGoals * awayForm.attackAway * homeForm.defenseHome;
+
+    // ajuste adicional pela diferença de rating Elo — o Elo enxerga toda a "rede" de
+    // resultados da competição (não só os jogos do próprio time), então é um sinal
+    // mais robusto que olhar isoladamente a posição na tabela.
+    const eloDiff = (rHome+HFA) - rAway;
+    const eloFactor = Utils.clamp(eloDiff/1000, -0.35, 0.35);
+    lambdaHome *= (1 + eloFactor*0.5);
+    lambdaAway *= (1 - eloFactor*0.5);
+
+    lambdaHome = Utils.clamp(lambdaHome, 0.2, 4.5);
+    lambdaAway = Utils.clamp(lambdaAway, 0.2, 4.5);
+
+    // pequena correção pelo histórico direto (H2H) dentro da competição
+    const h2h = headToHead(home.id, away.id, matches);
+    if(h2h.length){
+      let hGoals=0, aGoals=0;
+      h2h.slice(0,5).forEach(m => {
+        const homeWasHome = m.homeTeam.id === home.id;
+        hGoals += homeWasHome ? m.score.fullTime.home : m.score.fullTime.away;
+        aGoals += homeWasHome ? m.score.fullTime.away : m.score.fullTime.home;
+      });
+      const n = Math.min(5, h2h.length);
+      lambdaHome = lambdaHome*0.88 + (hGoals/n)*0.12;
+      lambdaAway = lambdaAway*0.88 + (aGoals/n)*0.12;
+    }
+
+    const RHO = -0.08;
+    const MAXG = 7;
+    let grid = [];
+    let pHomePoisson=0, pDrawPoisson=0, pAwayPoisson=0, pBTTS=0, pOver15=0, pOver25=0, pOver35=0;
+    let best = { h:0,a:0,p:0 };
+    let rawTotal = 0;
+    for(let h=0; h<=MAXG; h++){
+      grid[h] = [];
+      for(let a=0; a<=MAXG; a++){
+        let p = poisson(lambdaHome,h) * poisson(lambdaAway,a) * tau(h,a,lambdaHome,lambdaAway,RHO);
+        if(p < 0) p = 0;
+        grid[h][a] = p;
+        rawTotal += p;
+      }
+    }
+    for(let h=0; h<=MAXG; h++){
+      for(let a=0; a<=MAXG; a++){
+        grid[h][a] = grid[h][a] / rawTotal;
+        const p = grid[h][a];
+        if(h>a) pHomePoisson += p; else if(h<a) pAwayPoisson += p; else pDrawPoisson += p;
+        if(h>0 && a>0) pBTTS += p;
+        if(h+a > 1) pOver15 += p;
+        if(h+a > 2) pOver25 += p;
+        if(h+a > 3) pOver35 += p;
+        if(p > best.p) best = { h,a,p };
+      }
+    }
+
+    // segunda opinião independente: modelo Elo (rede completa de resultados da competição)
+    const eloProb = eloWinProb(rHome, rAway, HFA);
+
+    // ensemble: combina os dois modelos. Quanto mais jogos os times já disputaram
+    // NA competição, mais peso vai para o modelo de Poisson (mais preciso quando há
+    // dados diretos); com poucos jogos, o Elo pesa mais, pois se beneficia da rede
+    // inteira de confrontos e do prior global.
+    const dataPoints = homeForm.n + awayForm.n;
+    const poissonWeight = Utils.clamp(0.35 + dataPoints*0.05, 0.35, 0.75);
+    const eloWeight = 1 - poissonWeight;
+
+    let pHome = pHomePoisson*poissonWeight + eloProb.pHome*eloWeight;
+    let pDraw = pDrawPoisson*poissonWeight + eloProb.pDraw*eloWeight;
+    let pAway = pAwayPoisson*poissonWeight + eloProb.pAway*eloWeight;
+    const sumP = pHome+pDraw+pAway;
+    pHome/=sumP; pDraw/=sumP; pAway/=sumP;
+
+    // concordância entre os dois modelos quanto ao favorito — usado como sinal de confiança
+    function favoriteOf(h,d,a){ return h>=d && h>=a ? "HOME" : (a>=d && a>=h ? "AWAY" : "DRAW"); }
+    const poissonFav = favoriteOf(pHomePoisson,pDrawPoisson,pAwayPoisson);
+    const eloFav = favoriteOf(eloProb.pHome,eloProb.pDraw,eloProb.pAway);
+    const modelsAgree = poissonFav === eloFav;
+
+    const maxProb = Math.max(pHome,pDraw,pAway);
+    let confidence = 30 + Utils.clamp(dataPoints,0,20)*2.2 + (maxProb-0.34)*100 + (modelsAgree?8:-6);
+    if(h2h.length) confidence += Math.min(h2h.length,5)*1.2;
+    confidence = Math.round(Utils.clamp(confidence, 25, 96));
+
+    const factors = [];
+    factors.push({ name:"Rating Elo (casa x fora)", val: Math.round(rHome)+" x "+Math.round(rAway)+(HFA?(" · mando +"+Math.round(HFA)):""), positive: (rHome+HFA)>=rAway });
+    factors.push({ name:"Concordância entre modelos", val: modelsAgree ? "Poisson e Elo apontam o mesmo favorito" : "Modelos divergem — mais incerteza", positive: modelsAgree });
+    factors.push({ name:`Amostra de jogos (${home.shortName||home.name})`, val: homeForm.n+" na competição"+(homeForm.globalN?(" + "+homeForm.globalN+" em outras competições"):""), positive: homeForm.n>0 });
+    factors.push({ name:`Amostra de jogos (${away.shortName||away.name})`, val: awayForm.n+" na competição"+(awayForm.globalN?(" + "+awayForm.globalN+" em outras competições"):""), positive: awayForm.n>0 });
+    if(homeForm.winRate!=null) factors.push({ name: `Forma recente de ${home.shortName||home.name}`, val: (homeForm.winRate*100).toFixed(0)+"% vitórias ("+homeForm.formSeq.join("")+")", positive: homeForm.winRate>=0.5 });
+    if(awayForm.winRate!=null) factors.push({ name: `Forma recente de ${away.shortName||away.name}`, val: (awayForm.winRate*100).toFixed(0)+"% vitórias ("+awayForm.formSeq.join("")+")", positive: awayForm.winRate>=0.5 });
+    factors.push({ name:"Mando de campo", val:"+"+Math.round((HOME_ADV-1)*100)+"% ataque (base) + efeito Elo", positive:true });
+    factors.push({ name:`Força ofensiva (${home.shortName||home.name})`, val: Math.round(homeForm.attackHome*100)+"% da média", positive: homeForm.attackHome>=1 });
+    factors.push({ name:`Força ofensiva (${away.shortName||away.name})`, val: Math.round(awayForm.attackAway*100)+"% da média", positive: awayForm.attackAway>=1 });
+    factors.push({ name:`Força defensiva (${home.shortName||home.name})`, val: Math.round((2-homeForm.defenseHome)*100)+"% (quanto maior, melhor)", positive: homeForm.defenseHome<=1 });
+    factors.push({ name:`Força defensiva (${away.shortName||away.name})`, val: Math.round((2-awayForm.defenseAway)*100)+"% (quanto maior, melhor)", positive: awayForm.defenseAway<=1 });
+    if(ctx.standings){
+      const hPos = findPosition(ctx.standings, home.id), aPos = findPosition(ctx.standings, away.id);
+      if(hPos && aPos) factors.push({ name:"Posição na tabela", val: `${hPos}º vs ${aPos}º`, positive: hPos<aPos });
+    }
+    if(h2h.length) factors.push({ name:"Confrontos diretos (histórico)", val: h2h.length+" jogo(s) considerado(s)", positive:true });
+    if(homeForm.n===0 && awayForm.n===0 && homeForm.globalN===0 && awayForm.globalN===0){
+      factors.push({ name:"Aviso", val:"Nenhum dado histórico encontrado para os dois times — previsão baseada apenas nas médias da competição", positive:false });
+    }
+
+    return {
+      pHome, pDraw, pAway, pBTTS, pOver15, pOver25, pOver35, pUnder25: 1-pOver25,
+      expHome: lambdaHome, expAway: lambdaAway,
+      bestScore: best, confidence, factors, grid, h2hCount: h2h.length,
+      homeForm, awayForm,
+      elo: { home: Math.round(rHome), away: Math.round(rAway), hfa: Math.round(HFA) },
+      modelsAgree,
+      poissonProbs: { home:pHomePoisson, draw:pDrawPoisson, away:pAwayPoisson },
+      eloProbs: eloProb,
+      ensembleWeights: { poisson: poissonWeight, elo: eloWeight },
+    };
+  }
+
+  return { predictMatch, teamStrength, headToHead, computeEloRatings, eloWinProb };
 })();
 
 /* =====================================================================
@@ -1364,6 +1710,29 @@ const Views = (function(){
     return String(s);
   }
 
+  /* ---------- Ordenação genérica de listas de jogos ---------- */
+  function sortSelect(current){
+    const sel = Utils.el("select", { class:"select" }, [
+      Utils.el("option",{value:"date_asc"},["Data (mais antigo primeiro)"]),
+      Utils.el("option",{value:"date_desc"},["Data (mais recente primeiro)"]),
+      Utils.el("option",{value:"alpha_home_asc"},["Time da casa (A → Z)"]),
+      Utils.el("option",{value:"alpha_home_desc"},["Time da casa (Z → A)"]),
+    ]);
+    sel.value = current || "date_asc";
+    return sel;
+  }
+  function applySort(list, mode){
+    const arr = list.slice();
+    const nameOf = m => (m.homeTeam.shortName||m.homeTeam.name||"");
+    switch(mode){
+      case "date_desc": return arr.sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
+      case "alpha_home_asc": return arr.sort((a,b)=>nameOf(a).localeCompare(nameOf(b)));
+      case "alpha_home_desc": return arr.sort((a,b)=>nameOf(b).localeCompare(nameOf(a)));
+      case "date_asc":
+      default: return arr.sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+    }
+  }
+
   /* ---------- HOME ---------- */
   let homeAutoTimer = null;
   async function renderHome(){
@@ -1542,7 +1911,12 @@ const Views = (function(){
       Utils.el("option",{value:"FINISHED"},["Encerrados"]),
     ]);
     const stageSel = Utils.el("select", { class:"select" }, [ Utils.el("option",{value:""},["Todas as fases"]) ]);
-    filterRow.append(statusSel, stageSel);
+    const orderSel = sortSelect("date_asc");
+    filterRow.append(
+      field("Status", statusSel),
+      field("Fase", stageSel),
+      field("Ordenar por", orderSel),
+    );
     main().appendChild(filterRow);
     const body = Utils.el("div", { class:"grid grid-3 reveal-stagger" });
     main().appendChild(body);
@@ -1561,15 +1935,16 @@ const Views = (function(){
       }catch(err){ body.innerHTML=""; body.appendChild(errorState(err, load)); }
     }
     function renderList(){
-      let list = allMatches.slice().sort((a,b)=> new Date(a.utcDate)-new Date(b.utcDate));
+      let list = allMatches.slice();
       if(statusSel.value === "LIVE") list = list.filter(m=>m.status==="IN_PLAY"||m.status==="PAUSED");
       else if(statusSel.value) list = list.filter(m=>m.status===statusSel.value);
       if(stageSel.value) list = list.filter(m=>m.stage===stageSel.value);
+      list = applySort(list, orderSel.value);
       body.innerHTML = "";
       if(!list.length){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum jogo encontrado com esses filtros."])); return; }
       list.forEach(m => body.appendChild(matchCard(m)));
     }
-    statusSel.onchange = renderList; stageSel.onchange = renderList;
+    statusSel.onchange = renderList; stageSel.onchange = renderList; orderSel.onchange = renderList;
     load();
   }
 
@@ -1578,6 +1953,7 @@ const Views = (function(){
     const overlay = document.getElementById("matchModal");
     const bodyEl = document.getElementById("modalBody");
     overlay.classList.add("open");
+    document.body.classList.add("modal-open");
     document.getElementById("modalCompTag").textContent = "Carregando…";
     bodyEl.innerHTML = ""; bodyEl.appendChild(loadingBlock(1));
 
@@ -1682,13 +2058,18 @@ const Views = (function(){
   async function loadPrediction(m, panel){
     try{
       const comp = Api.getComp();
-      const [homeMatchesRes, awayMatchesRes] = await Promise.all([
-        Api.teamMatches(m.homeTeam.id, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
-        Api.teamMatches(m.awayTeam.id, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
+      const [matchesData, standings, homeGlobalData, awayGlobalData] = await Promise.all([
+        Api.matches(comp, ""),
+        Api.standings(comp).catch(()=>null),
+        Api.teamMatches(m.homeTeam.id, "?limit=15").catch(()=>({matches:[]})),
+        Api.teamMatches(m.awayTeam.id, "?limit=15").catch(()=>({matches:[]})),
       ]);
-      let standings = null;
-      try{ standings = await Api.standings(comp); }catch(e){}
-      const ctx = { matches: [...(homeMatchesRes.matches||[]), ...(awayMatchesRes.matches||[])], standings };
+      const ctx = {
+        matches: matchesData.matches || [],
+        standings,
+        homeGlobalMatches: homeGlobalData.matches || [],
+        awayGlobalMatches: awayGlobalData.matches || [],
+      };
       const pred = Predict.predictMatch(m.homeTeam, m.awayTeam, ctx);
       panel.innerHTML = "";
       panel.appendChild(predictionCard(m.homeTeam, m.awayTeam, pred));
@@ -1719,6 +2100,14 @@ const Views = (function(){
       bars.appendChild(row);
     });
     card.appendChild(bars);
+
+    if(p.elo){
+      const eloRow = Utils.el("div",{style:"display:flex;justify-content:space-between;gap:8px;font-size:.72rem;color:var(--text-2);margin:-6px 0 var(--sp-4)"},[
+        Utils.el("span",{},["Elo: "+p.elo.home+" x "+p.elo.away+(p.elo.hfa?(" (mando +"+p.elo.hfa+")"):"")]),
+        Utils.el("span",{},[p.modelsAgree ? "Poisson + Elo concordam" : "Poisson e Elo divergem"]),
+      ]);
+      card.appendChild(eloRow);
+    }
 
     const grid = Utils.el("div", { class:"predict-grid" }, [
       statBox("Placar provável", p.bestScore.h+" – "+p.bestScore.a),
@@ -1753,7 +2142,9 @@ const Views = (function(){
       Utils.el("span",{class:"f-val "+(f.positive?"pos":"neg")},[f.val]),
     ])));
     card.appendChild(factors);
-    card.appendChild(Utils.el("p",{style:"font-size:.7rem;color:var(--text-2);margin-top:12px"},["Estimativa estatística (distribuição de Poisson ponderada por forma recente, médias de gols e mando de campo, com ajuste pela posição na tabela quando disponível). Não é garantia de resultado — é só pra divertir o palpite."]));
+    card.appendChild(Utils.el("p",{style:"font-size:.7rem;color:var(--text-2);margin-top:12px"},[
+      "Modelo estatístico em ensemble: distribuição de Poisson bivariada com correção de Dixon-Coles para placares baixos, forças de ataque/defesa com encolhimento Bayesiano (shrinkage) e ponderação por recência, combinada com um rating Elo dinâmico calculado sobre todos os jogos já disputados na competição e, quando o time ainda tem poucos jogos no torneio, também com seu histórico recente em outras competições. As probabilidades finais de vitória/empate/derrota são uma média ponderada entre o modelo de Poisson e o modelo de Elo — o peso se ajusta conforme a quantidade de dados disponível. Não é garantia de resultado, é estatística aplicada ao futebol."
+    ]));
     return card;
   }
   function statBox(label, val){ return Utils.el("div",{class:"predict-stat"},[Utils.el("b",{},[val]), Utils.el("span",{},[label])]); }
@@ -1766,13 +2157,7 @@ const Views = (function(){
 
     if(m.status === "FINISHED" && existing){
       const ev = Guesses.evaluate(m.id, m);
-      wrap.appendChild(Utils.el("div",{class:"guess-result "+(ev.hits.vencedor?"hit":"miss")},[
-        ev.hits.vencedor ? "✅ Você acertou o resultado!" : "❌ Você errou o resultado.",
-      ]));
-      wrap.appendChild(Utils.el("div",{class:"mc-meta",style:"margin-top:8px"},[
-        "Seu palpite: "+existing.home+" × "+existing.away+" — Resultado real: "+m.score.fullTime.home+" × "+m.score.fullTime.away,
-        ev.hits.placarExato ? " · 🎯 placar exato!" : ""
-      ]));
+      wrap.appendChild(guessResultBlock(ev, m));
       return wrap;
     }
     if(lockedByTime){
@@ -1786,13 +2171,42 @@ const Views = (function(){
     return wrap;
   }
 
+  function guessResultBlock(ev, m){
+    const wrap = Utils.el("div");
+    const tier = Guesses.resultTier(ev);
+    const tierCls = tier==="exact" ? "hit" : (tier==="partial" ? "partial" : "miss");
+    const tierMsg = tier==="exact" ? "🎯 Você acertou o placar exato!" : (tier==="partial" ? "✅ Você acertou o resultado (mas não o placar exato)." : "❌ Você errou o palpite.");
+    wrap.appendChild(Utils.el("div",{class:"guess-result "+tierCls},[tierMsg]));
+    wrap.appendChild(Utils.el("div",{class:"mc-meta",style:"margin-top:8px"},[
+      "Seu palpite: "+ev.home+" × "+ev.away+" — Resultado real: "+ev.realScore.home+" × "+ev.realScore.away
+    ]));
+    const bd = Utils.el("div",{class:"guess-breakdown"});
+    bd.appendChild(Utils.el("div",{class:"gb-row"},[Utils.el("span",{},["Placar exato"]), Utils.el("b",{class:ev.hits.placarExato?"ok":"fail"},[ev.hits.placarExato?"✔ acertou":"✘ errou"])]));
+    bd.appendChild(Utils.el("div",{class:"gb-row"},[Utils.el("span",{},["Vencedor/empate"]), Utils.el("b",{class:ev.hits.vencedor?"ok":"fail"},[ev.hits.vencedor?"✔ acertou":"✘ errou"])]));
+    if(ev.hits.primeiroGol !== null && ev.hits.primeiroGol !== undefined){
+      bd.appendChild(Utils.el("div",{class:"gb-row"},[Utils.el("span",{},["Quem faz o 1º gol"]), Utils.el("b",{class:ev.hits.primeiroGol?"ok":"fail"},[ev.hits.primeiroGol?"✔ acertou":"✘ errou"])]));
+    }
+    if(ev.hits.cartoes !== null && ev.hits.cartoes !== undefined){
+      bd.appendChild(Utils.el("div",{class:"gb-row"},[Utils.el("span",{},["Total de cartões ("+(ev.cartoesReal!=null?ev.cartoesReal:"?")+" no jogo)"]), Utils.el("b",{class:ev.hits.cartoes?"ok":"fail"},[ev.hits.cartoes?"✔ acertou":"✘ errou"])]));
+    }
+    if(ev.corners){
+      bd.appendChild(Utils.el("div",{class:"gb-row"},[Utils.el("span",{},["Escanteios (seu palpite: "+ev.corners+")"]), Utils.el("b",{class:"na"},["não verificável pela API"])]));
+    }
+    if(ev.motm){
+      bd.appendChild(Utils.el("div",{class:"gb-row"},[Utils.el("span",{},["Craque da partida (seu palpite: "+ev.motm+")"]), Utils.el("b",{class:"na"},["não verificável pela API"])]));
+    }
+    wrap.appendChild(bd);
+    wrap.appendChild(Utils.el("div",{class:"mc-meta",style:"margin-top:10px;font-weight:700;color:var(--gold)"},["Pontuação: "+ev.points+" / "+ev.possible+" pontos"]));
+    return wrap;
+  }
+
   function buildGuessForm(m, existing, onSaved){
     const wrap = Utils.el("div", {});
     wrap.appendChild(Utils.el("p",{style:"font-size:.8rem;color:var(--text-1)"},["Registre seu palpite antes do apito inicial. Tudo fica salvo só no seu navegador — sem dinheiro, é só pra fixar e ver depois se acertou 😉"]));
     const form = Utils.el("div", { class:"guess-form" });
     const homeInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.home:"0"});
     const awayInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.away:"0"});
-    const firstGoal = Utils.el("input",{type:"text",placeholder:"Ex: time da casa",value:existing?existing.firstGoal||"":""});
+    const firstGoal = Utils.el("input",{type:"text",placeholder:"Ex: time da casa, ou 'ninguém'",value:existing?existing.firstGoal||"":""});
     const cardsInput = Utils.el("input",{type:"number",min:"0",max:"20",value:existing?existing.cards||"":""});
     const cornersInput = Utils.el("input",{type:"number",min:"0",max:"30",value:existing?existing.corners||"":""});
     const motmInput = Utils.el("input",{type:"text",placeholder:"Nome do jogador",value:existing?existing.motm||"":""});
@@ -1801,9 +2215,9 @@ const Views = (function(){
       field("Placar "+(m.homeTeam.shortName||"casa"), homeInput),
       field("Placar "+(m.awayTeam.shortName||"fora"), awayInput),
       field("Quem faz o 1º gol", firstGoal),
-      field("Total de cartões", cardsInput),
-      field("Total de escanteios", cornersInput),
-      field("Craque da partida", motmInput),
+      field("Total de cartões (conferido)", cardsInput),
+      fieldWithHint("Total de escanteios", cornersInput, "Apenas informativo — a API gratuita não fornece escanteios."),
+      fieldWithHint("Craque da partida", motmInput, "Apenas informativo — não é conferido automaticamente."),
     );
     wrap.appendChild(form);
     const saveBtn = Utils.el("button",{class:"btn btn-gold",style:"margin-top:14px"},[existing?"Atualizar palpite":"Salvar palpite"]);
@@ -1816,7 +2230,7 @@ const Views = (function(){
         utcDate: m.utcDate,
       });
       const name = Profile.getName();
-      Toast.show("Palpite salvo!" + (name ? " Boa, "+name+"!" : ""), "Vamos conferir assim que o jogo terminar.");
+      Toast.show("Palpite salvo!" + (name ? " Boa, "+name+"!" : ""), "Vamos conferir assim que o jogo terminar — placar exato vale mais pontos que só acertar o vencedor.");
       if(onSaved) onSaved();
     };
     wrap.appendChild(saveBtn);
@@ -1828,6 +2242,7 @@ const Views = (function(){
     return wrap;
   }
   function field(label, input){ return Utils.el("div",{class:"field"},[Utils.el("label",{},[label]), input]); }
+  function fieldWithHint(label, input, hint){ return Utils.el("div",{class:"field"},[Utils.el("label",{},[label]), input, Utils.el("div",{class:"hint"},[hint])]); }
 
   /* ---------- CLASSIFICAÇÃO ---------- */
   async function renderStandings(){
@@ -1849,6 +2264,7 @@ const Views = (function(){
   function standingsTable(group){
     const wrap = Utils.el("div", { class:"section" });
     wrap.appendChild(Utils.el("div",{class:"section-title"},[group.group ? group.group.replace("GROUP_","Grupo ") : "Geral"]));
+    const scroll = Utils.el("div",{class:"table-scroll"});
     const table = Utils.el("table", { class:"table" });
     table.appendChild(Utils.el("thead",{},[Utils.el("tr",{},[
       Utils.el("th",{},["#"]), Utils.el("th",{},["Time"]), Utils.el("th",{class:"num"},["J"]),
@@ -1877,7 +2293,8 @@ const Views = (function(){
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
-    wrap.appendChild(table);
+    scroll.appendChild(table);
+    wrap.appendChild(scroll);
     return wrap;
   }
   function formDots(formStr){
@@ -2110,8 +2527,8 @@ const Views = (function(){
       const idA = Number(selA.value), idB = Number(selB.value);
       if(!idA || !idB || idA===idB){ body.innerHTML=""; body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione dois times diferentes para comparar."])); return; }
       const teamA = teams.find(t=>t.id===idA), teamB = teams.find(t=>t.id===idB);
-      const formA = Predict.teamForm(idA, allMatches);
-      const formB = Predict.teamForm(idB, allMatches);
+      const formA = Predict.teamStrength(idA, allMatches, { avgHomeGoals:1.4, avgAwayGoals:1.1 });
+      const formB = Predict.teamStrength(idB, allMatches, { avgHomeGoals:1.4, avgAwayGoals:1.1 });
       body.innerHTML = "";
       if(!formA && !formB){ body.appendChild(Utils.el("div",{class:"empty-state"},["Nenhum dos dois times tem jogos finalizados nesta competição ainda."])); return; }
 
@@ -2149,9 +2566,18 @@ const Views = (function(){
   function statsJogoPanel(allMatches){
     const wrap = Utils.el("div", { class:"fade-in" });
     const toolbar = Utils.el("div",{class:"analysis-toolbar"});
-    const finished = allMatches.filter(m=>m.status==="FINISHED").sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
-    const matchSel = Utils.el("select",{class:"select"},[Utils.el("option",{value:""},["Selecione um jogo…"]), ...finished.map(m=>Utils.el("option",{value:m.id},[Utils.fmtDate(m.utcDate)+" · "+(m.homeTeam.shortName||m.homeTeam.name)+" "+m.score.fullTime.home+"×"+m.score.fullTime.away+" "+(m.awayTeam.shortName||m.awayTeam.name)]))]);
-    toolbar.appendChild(field("Jogo", matchSel));
+    const orderSel = sortSelect("date_desc");
+    let finished = allMatches.filter(m=>m.status==="FINISHED");
+    const matchSel = Utils.el("select",{class:"select"});
+    function rebuildMatchOptions(){
+      const list = applySort(finished, orderSel.value);
+      matchSel.innerHTML = "";
+      matchSel.appendChild(Utils.el("option",{value:""},["Selecione um jogo…"]));
+      list.forEach(m => matchSel.appendChild(Utils.el("option",{value:m.id},[Utils.fmtDate(m.utcDate)+" · "+(m.homeTeam.shortName||m.homeTeam.name)+" "+m.score.fullTime.home+"×"+m.score.fullTime.away+" "+(m.awayTeam.shortName||m.awayTeam.name)])));
+    }
+    rebuildMatchOptions();
+    orderSel.onchange = rebuildMatchOptions;
+    toolbar.append(field("Ordenar por", orderSel), field("Jogo", matchSel));
     wrap.appendChild(toolbar);
     const body = Utils.el("div"); wrap.appendChild(body);
     body.appendChild(Utils.el("div",{class:"empty-state"},["Selecione um jogo encerrado para ver os detalhes."]));
@@ -2231,11 +2657,12 @@ const Views = (function(){
     const resultHost = Utils.el("div"); main().appendChild(resultHost);
     resultHost.appendChild(loadingBlock(1));
 
-    let teams = [], upcoming = [];
+    let teams = [], upcoming = [], allMatches = [];
     try{
       const [teamsData, matchesData] = await Promise.all([ Api.teams(comp).catch(()=>({teams:[]})), Api.matches(comp,"").catch(()=>({matches:[]})) ]);
       teams = teamsData.teams || [];
-      upcoming = (matchesData.matches||[]).filter(m=>m.status==="SCHEDULED"||m.status==="TIMED").sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+      allMatches = matchesData.matches || [];
+      upcoming = allMatches.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED").sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
     }catch(err){ resultHost.innerHTML=""; resultHost.appendChild(errorState(err, renderPredictPage)); return; }
     resultHost.innerHTML = "";
     resultHost.appendChild(Utils.el("div",{class:"empty-state"},["Escolha um confronto acima (ou dois times) e toque em Gerar previsão."]));
@@ -2263,13 +2690,12 @@ const Views = (function(){
       const homeTeam = teams.find(t=>t.id===homeId), awayTeam = teams.find(t=>t.id===awayId);
       resultHost.innerHTML = ""; resultHost.appendChild(loadingBlock(1));
       try{
-        const [homeMatchesRes, awayMatchesRes] = await Promise.all([
-          Api.teamMatches(homeId, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
-          Api.teamMatches(awayId, "?status=FINISHED&limit=8").catch(()=>({matches:[]})),
-        ]);
         let standings = null;
         try{ standings = await Api.standings(comp); }catch(e){}
-        const ctx = { matches: [...(homeMatchesRes.matches||[]), ...(awayMatchesRes.matches||[])], standings };
+        let homeGlobalMatches = [], awayGlobalMatches = [];
+        try{ const r = await Api.teamMatches(homeId, "?limit=15"); homeGlobalMatches = r.matches||[]; }catch(e){}
+        try{ const r = await Api.teamMatches(awayId, "?limit=15"); awayGlobalMatches = r.matches||[]; }catch(e){}
+        const ctx = { matches: allMatches, standings, homeGlobalMatches, awayGlobalMatches };
         const pred = Predict.predictMatch(homeTeam, awayTeam, ctx);
         resultHost.innerHTML = "";
         resultHost.appendChild(predictionCard(homeTeam, awayTeam, pred));
@@ -2288,7 +2714,7 @@ const Views = (function(){
     main().appendChild(Utils.el("div", { class:"stat-banner" }, [
       statCell(s.total, "Palpites registrados"), statCell(s.checked, "Já conferidos"),
       statCell(s.correct, "Resultados certos"), statCell(s.exact, "Placares exatos"),
-      statCell(s.pct+"%", "Precisão"), statCell(s.streak.current, "Sequência atual"),
+      statCell(s.pct+"%", "Precisão"), statCell(s.totalPoints, "Pontos no bolão"), statCell(s.streak.current, "Sequência atual"),
     ]));
 
     if(!Api.getKey()){ main().appendChild(noKeyState()); return; }
@@ -2301,7 +2727,11 @@ const Views = (function(){
     main().appendChild(newSec);
 
     const listWrap = Utils.el("div",{class:"section"});
-    listWrap.appendChild(Utils.el("div",{class:"section-title"},["Histórico de palpites"]));
+    const listHeadRow = Utils.el("div",{style:"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)"});
+    listHeadRow.appendChild(Utils.el("div",{class:"section-title",style:"margin-bottom:0"},["Histórico de palpites"]));
+    const histOrderSel = sortSelect("date_desc");
+    listHeadRow.appendChild(histOrderSel);
+    listWrap.appendChild(listHeadRow);
     const listBody = Utils.el("div"); listWrap.appendChild(listBody);
     main().appendChild(listWrap);
     listBody.appendChild(loadingBlock(3));
@@ -2332,26 +2762,40 @@ const Views = (function(){
         };
       }
 
-      listBody.innerHTML = "";
-      const guesses = Guesses.all();
-      const ids = Object.keys(guesses);
-      if(!ids.length){ listBody.appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum palpite ainda"]), "Use o formulário acima para registrar seu placar antes do apito inicial."])); return; }
-      const grid = Utils.el("div",{class:"grid grid-2"});
-      ids.forEach(id => {
-        const m = byId[id]; const g = guesses[id];
-        if(!m) return;
-        if(m.status === "FINISHED") Guesses.evaluate(id, m);
-        const card = Utils.el("div",{class:"match-card"},[]);
-        card.onclick = () => location.hash = "#/jogos/match/"+id;
-        card.appendChild(Utils.el("div",{class:"mc-top"},[Utils.el("span",{},[(m.homeTeam.shortName||m.homeTeam.name)+" x "+(m.awayTeam.shortName||m.awayTeam.name)]), statusChip(m)]));
-        card.appendChild(Utils.el("div",{class:"mc-meta"},["Seu palpite: "+g.home+" × "+g.away]));
-        if(m.status==="FINISHED"){
-          card.appendChild(Utils.el("div",{class:"mc-meta"},["Real: "+m.score.fullTime.home+" × "+m.score.fullTime.away]));
-          card.appendChild(Utils.el("div",{class:"guess-result "+(g.hits.vencedor?"hit":"miss"),style:"margin-top:8px"},[g.hits.vencedor?"✅ Acertou o resultado":"❌ Errou o resultado"]));
-        }
-        grid.appendChild(card);
-      });
-      listBody.appendChild(grid);
+      function paintHistory(){
+        listBody.innerHTML = "";
+        const guesses = Guesses.all();
+        const ids = Object.keys(guesses);
+        if(!ids.length){ listBody.appendChild(Utils.el("div",{class:"empty-state"},[Utils.el("b",{},["Nenhum palpite ainda"]), "Use o formulário acima para registrar seu placar antes do apito inicial."])); return; }
+        let rows = ids.map(id => ({ id, m: byId[id], g: guesses[id] })).filter(r => r.m);
+        rows.sort((a,b) => {
+          const mode = histOrderSel.value;
+          if(mode === "date_asc") return new Date(a.m.utcDate) - new Date(b.m.utcDate);
+          if(mode === "alpha_home_asc") return (a.m.homeTeam.shortName||"").localeCompare(b.m.homeTeam.shortName||"");
+          if(mode === "alpha_home_desc") return (b.m.homeTeam.shortName||"").localeCompare(a.m.homeTeam.shortName||"");
+          return new Date(b.m.utcDate) - new Date(a.m.utcDate); // date_desc default
+        });
+        const grid = Utils.el("div",{class:"grid grid-2"});
+        rows.forEach(({id,m,g}) => {
+          if(m.status === "FINISHED") Guesses.evaluate(id, m);
+          const gg = Guesses.get(id);
+          const card = Utils.el("div",{class:"match-card"},[]);
+          card.onclick = () => location.hash = "#/jogos/match/"+id;
+          card.appendChild(Utils.el("div",{class:"mc-top"},[Utils.el("span",{},[(m.homeTeam.shortName||m.homeTeam.name)+" x "+(m.awayTeam.shortName||m.awayTeam.name)]), statusChip(m)]));
+          card.appendChild(Utils.el("div",{class:"mc-meta"},["Seu palpite: "+gg.home+" × "+gg.away]));
+          if(m.status==="FINISHED" && gg.checked){
+            const tier = Guesses.resultTier(gg);
+            card.appendChild(Utils.el("div",{class:"mc-meta"},["Real: "+m.score.fullTime.home+" × "+m.score.fullTime.away+" · "+gg.points+"/"+gg.possible+" pts"]));
+            const tierCls = tier==="exact"?"hit":(tier==="partial"?"partial":"miss");
+            const tierTxt = tier==="exact"?"🎯 Placar exato":(tier==="partial"?"✅ Resultado certo":"❌ Errou");
+            card.appendChild(Utils.el("div",{class:"guess-result "+tierCls,style:"margin-top:8px"},[tierTxt]));
+          }
+          grid.appendChild(card);
+        });
+        listBody.appendChild(grid);
+      }
+      histOrderSel.onchange = paintHistory;
+      paintHistory();
     }catch(err){
       quickCard.innerHTML=""; quickCard.appendChild(errorState(err, renderGuesses));
       listBody.innerHTML=""; listBody.appendChild(errorState(err, renderGuesses));
@@ -2385,7 +2829,14 @@ const Views = (function(){
     main().appendChild(searchSec);
 
     const favSec = Utils.el("div",{class:"section"});
-    favSec.appendChild(Utils.el("div",{class:"section-title"},["Seus favoritos"]));
+    const favHeadRow = Utils.el("div",{style:"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)"});
+    favHeadRow.appendChild(Utils.el("div",{class:"section-title",style:"margin-bottom:0"},["Seus favoritos"]));
+    const favOrderSel = Utils.el("select",{class:"select"},[
+      Utils.el("option",{value:"alpha_asc"},["Nome (A → Z)"]),
+      Utils.el("option",{value:"alpha_desc"},["Nome (Z → A)"]),
+    ]);
+    favHeadRow.appendChild(favOrderSel);
+    favSec.appendChild(favHeadRow);
     const favGrid = Utils.el("div",{class:"grid grid-4"});
     favSec.appendChild(favGrid);
     main().appendChild(favSec);
@@ -2430,8 +2881,12 @@ const Views = (function(){
       favGrid.appendChild(loadingBlock(ids.length));
       const teams = await getTeamsFor(activeComp);
       favGrid.innerHTML = "";
-      ids.forEach(id => {
-        const t = teams.find(x=>x.id===id) || { id, name:"Time #"+id, shortName:"Time #"+id };
+      let list = ids.map(id => teams.find(x=>x.id===id) || { id, name:"Time #"+id, shortName:"Time #"+id });
+      list.sort((a,b)=>{
+        const an=(a.shortName||a.name), bn=(b.shortName||b.name);
+        return favOrderSel.value==="alpha_desc" ? bn.localeCompare(an) : an.localeCompare(bn);
+      });
+      list.forEach(t => {
         const card = Utils.el("div",{class:"match-card",style:"text-align:center"},[
           Utils.crestImg(t,48),
           Utils.el("div",{style:"font-weight:700;margin-top:10px"},[t.shortName||t.name]),
@@ -2443,6 +2898,7 @@ const Views = (function(){
         favGrid.appendChild(card);
       });
     }
+    favOrderSel.onchange = paintFavGrid;
 
     function paintComp(){ searchInput.value=""; resultsHost.innerHTML=""; paintFavGrid(); }
     paintComp();
@@ -2534,9 +2990,14 @@ function openSettings(){
     : "Cole sua chave gratuita aqui";
   document.getElementById("compSelect").value = Api.getComp();
   document.getElementById("settingsModal").classList.add("open");
+  document.body.classList.add("modal-open");
 }
-function closeSettings(){ document.getElementById("settingsModal").classList.remove("open"); }
-function closeMatchModal(){ document.getElementById("matchModal").classList.remove("open"); }
+function closeSettings(){ document.getElementById("settingsModal").classList.remove("open"); syncModalOpenClass(); }
+function closeMatchModal(){ document.getElementById("matchModal").classList.remove("open"); syncModalOpenClass(); }
+function syncModalOpenClass(){
+  const anyOpen = document.getElementById("matchModal").classList.contains("open") || document.getElementById("settingsModal").classList.contains("open");
+  document.body.classList.toggle("modal-open", anyOpen);
+}
 
 function toggleMobileNav(force){
   const nav = document.getElementById("mainNav");
@@ -2581,8 +3042,10 @@ function initApp(){
   document.getElementById("settingsBtn").onclick = openSettings;
   document.getElementById("settingsCloseBtn").onclick = closeSettings;
   document.getElementById("settingsModal").addEventListener("click", (e)=>{ if(e.target.id==="settingsModal") closeSettings(); });
+  document.getElementById("settingsModal").addEventListener("touchend", (e)=>{ if(e.target.id==="settingsModal") closeSettings(); });
   document.getElementById("modalCloseBtn").onclick = () => { closeMatchModal(); location.hash = "#/jogos"; };
   document.getElementById("matchModal").addEventListener("click", (e)=>{ if(e.target.id==="matchModal"){ closeMatchModal(); location.hash="#/jogos"; } });
+  document.getElementById("matchModal").addEventListener("touchend", (e)=>{ if(e.target.id==="matchModal"){ closeMatchModal(); location.hash="#/jogos"; } });
   document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeSettings(); closeMatchModal(); toggleMobileNav(false); } });
 
   // ALTERAÇÃO: manter chave existente se campo vier vazio
