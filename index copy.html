@@ -1027,230 +1027,134 @@ const Notify = (function(){
 })();
 
 /* =====================================================================
-   9. PREDICT — Motor de Previsão de IA (multi-modelo)
+   9. PREDICT
    ===================================================================== */
-/* =====================================================================
-9. PREDICT — v3 (Elo triplo + Poisson-DixonColes + SOS iterativo + shrinkage bayesiano + forma ponderada + modelo de tabela + H2H recência + ajuste fino por forma)
-===================================================================== */
 const Predict = (function(){
   function poisson(lambda, k){
-    if(lambda <= 0) return k === 0 ? 1 : 0;
     return (Math.pow(lambda,k) * Math.exp(-lambda)) / factorial(k);
   }
   function factorial(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+
   function tau(x,y,lambda,mu,rho){
-    if(x===0 && y===0) return 1 - lambda*mu*rho;
-    if(x===0 && y===1) return 1 + lambda*rho;
-    if(x===1 && y===0) return 1 + mu*rho;
+    if(x===0 && y===0) return 1 - (lambda*mu*rho);
+    if(x===0 && y===1) return 1 + (lambda*rho);
+    if(x===1 && y===0) return 1 + (mu*rho);
     if(x===1 && y===1) return 1 - rho;
     return 1;
   }
-  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 
   function buildLeagueStats(matches){
     const finished = matches.filter(m => m.status === "FINISHED");
-    if(!finished.length) return { avgHomeGoals:1.45, avgAwayGoals:1.15, avgTotal:2.60, n:0 };
-    let hg=0, ag=0;
-    finished.forEach(m => { hg += (m.score.fullTime.home||0); ag += (m.score.fullTime.away||0); });
-    const n = finished.length;
-    return { avgHomeGoals: hg/n, avgAwayGoals: ag/n, avgTotal:(hg+ag)/n, n };
+    let homeGoals = 0, awayGoals = 0;
+    finished.forEach(m => { homeGoals += (m.score.fullTime.home||0); awayGoals += (m.score.fullTime.away||0); });
+    const n = finished.length || 1;
+    return {
+      avgHomeGoals: finished.length ? homeGoals/n : 1.45,
+      avgAwayGoals: finished.length ? awayGoals/n : 1.15,
+      n: finished.length,
+    };
   }
 
-  // ρ dinâmico: ligas com menos gols têm correlação negativa mais forte em placares baixos
-  function estimateRho(leagueStats, isKnockout){
-    const avgTotal = leagueStats.avgHomeGoals + leagueStats.avgAwayGoals;
-    const base = clamp(-0.10 - (2.6 - avgTotal) * 0.045, -0.24, 0.0);
-    return isKnockout ? base - 0.03 : base;
-  }
-
-  /* ---------- Elo triplo: geral + ataque + defesa ---------- */
   function computeEloRatings(matches){
-    const finished = matches.filter(m => m.status === "FINISHED")
-                            .sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
-    const G = {}, A = {}, D = {};
-    const INIT = 1500;
-    const g = id => G[id] ?? INIT;
-    const a = id => A[id] ?? INIT;
-    const d = id => D[id] ?? INIT;
+    const finished = matches.filter(m => m.status === "FINISHED").slice().sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+    const ratings = {};
+    const K_BASE = 32;
+    function getR(id){ return ratings[id] !== undefined ? ratings[id] : 1500; }
 
-    // HFA empírico
-    let hfaSum = 0;
-    finished.forEach(m => {
-      const hg = m.score.fullTime.home||0, ag = m.score.fullTime.away||0;
-      if(hg !== ag) hfaSum += (hg>ag ? 1 : -1);
-    });
-    const HFA = clamp((finished.length ? (hfaSum/finished.length)*55 : 55), 20, 110);
+    let homeGoalSupremacy = 0;
+    if(finished.length){
+      homeGoalSupremacy = finished.reduce((s,m)=> s + ((m.score.fullTime.home||0)-(m.score.fullTime.away||0)), 0) / finished.length;
+    }
+    const HFA = Utils.clamp(homeGoalSupremacy * 60, 0, 90);
 
     finished.forEach(m => {
       const hId = m.homeTeam.id, aId = m.awayTeam.id;
-      const hg = m.score.fullTime.home||0, ag = m.score.fullTime.away||0;
-      const diff = hg - ag;
-      const resH = diff>0?1:(diff<0?0:0.5);
-      const resA = 1-resH;
-
-      // Elo GERAL
-      const expH = 1/(1+Math.pow(10, -((g(hId)+HFA-g(aId))/400)));
-      const expA = 1-expH;
-      const gDiff = Math.abs(diff);
-      const Gm = gDiff<=1?1:(gDiff===2?1.35:(11+gDiff)/8);
-      const K = 28 * Gm;
-      G[hId] = g(hId) + K*(resH-expH);
-      G[aId] = g(aId) + K*(resA-expA);
-
-      // Elo de ATAQUE (baseado em gols marcados)
-      const atkResH = clamp(hg/1.5, 0, 2);
-      const atkResA = clamp(ag/1.3, 0, 2);
-      const Ka = 14;
-      A[hId] = a(hId) + Ka*(atkResH - 1);
-      A[aId] = a(aId) + Ka*(atkResA - 1);
-
-      // Elo de DEFESA (inverso: levar gol é ruim)
-      const Kd = 14;
-      D[hId] = d(hId) - Kd*(ag - 1.1);
-      D[aId] = d(aId) - Kd*(hg - 1.3);
+      const hR = getR(hId), aR = getR(aId);
+      const hGoals = m.score.fullTime.home||0, aGoals = m.score.fullTime.away||0;
+      const diff = hGoals - aGoals;
+      const expectedHome = 1/(1+Math.pow(10, -((hR+HFA-aR)/400)));
+      let actualHome;
+      if(diff>0) actualHome = 1; else if(diff<0) actualHome = 0; else actualHome = 0.5;
+      const gDiffAbs = Math.abs(diff);
+      const G = gDiffAbs<=1 ? 1 : (gDiffAbs===2 ? 1.5 : (11+gDiffAbs)/8);
+      const K = K_BASE * G;
+      const delta = K*(actualHome-expectedHome);
+      ratings[hId] = hR + delta;
+      ratings[aId] = aR - delta;
     });
-    return { G, A, D, HFA };
-  }
-
-  function eloFor(teamId, eloRatings, globalMatches){
-    if(eloRatings.G[teamId] !== undefined){
-      const base = eloRatings.G[teamId];
-      const atk = eloRatings.A[teamId] !== undefined ? eloRatings.A[teamId] : 1500;
-      const def = eloRatings.D[teamId] !== undefined ? eloRatings.D[teamId] : 1500;
-      return base*0.6 + atk*0.25 + (3000-def)*0.15;
-    }
-    const finished = (globalMatches||[]).filter(m=>m.status==="FINISHED").slice(-10);
-    if(finished.length){
-      let diffSum = 0;
-      finished.forEach(m => {
-        const isHome = m.homeTeam.id===teamId;
-        const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
-        const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
-        diffSum += (my-opp);
-      });
-      return 1500 + clamp((diffSum/finished.length)*45, -260, 260);
-    }
-    return 1500;
+    return { ratings, HFA };
   }
 
   function eloWinProb(rHome, rAway, HFA){
-    const expH = 1/(1+Math.pow(10, -((rHome+HFA-rAway)/400)));
+    const expectedHome = 1/(1+Math.pow(10, -((rHome+HFA-rAway)/400)));
     const gap = Math.abs(rHome+HFA-rAway);
-    const drawProb = clamp(0.28 - gap/1600, 0.14, 0.28);
-    let pHome = clamp(expH - drawProb/2, 0.03, 0.95);
-    let pAway = clamp((1-expH) - drawProb/2, 0.03, 0.95);
-    let pDraw = clamp(1-pHome-pAway, 0.05, 0.45);
-    const s = pHome+pDraw+pAway;
-    return { pHome:pHome/s, pDraw:pDraw/s, pAway:pAway/s };
+    const drawProb = Utils.clamp(0.28 - gap/1500, 0.15, 0.28);
+    let pHome = Utils.clamp(expectedHome - drawProb/2, 0.02, 0.96);
+    let pAway = Utils.clamp((1-expectedHome) - drawProb/2, 0.02, 0.96);
+    let pDraw = Utils.clamp(1-pHome-pAway, 0.02, 0.9);
+    const sum = pHome+pDraw+pAway;
+    return { pHome:pHome/sum, pDraw:pDraw/sum, pAway:pAway/sum };
   }
 
-  /* ---------- força bruta com recência + boost últimos 5 ---------- */
   function rawStrength(teamId, matches){
     const finished = matches
       .filter(m => m.status === "FINISHED" && (m.homeTeam.id===teamId || m.awayTeam.id===teamId))
       .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
-    if(!finished.length) return null;
-    const DECAY = 0.88;
+    if(finished.length === 0) return null;
+    const DECAY = 0.90;
     const N = finished.length;
     let wins=0, draws=0, losses=0, formSeq=[];
-    let gfHW=0, gaHW=0, hW=0, gfAW=0, gaAW=0, aW=0, hN=0, aN=0;
+    let gfHomeW=0, gaHomeW=0, homeW=0, gfAwayW=0, gaAwayW=0, awayW=0, homeN=0, awayN=0;
+
     finished.forEach((m, idx) => {
       const isHome = m.homeTeam.id === teamId;
       const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
       const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
-      const recency = Math.pow(DECAY, (N - 1 - idx));
-      const recentBoost = idx >= N-5 ? 1.35 : 1.0;
-      const weight = recency * recentBoost;
-      if(my > opp){ wins++; formSeq.push("W"); }
-      else if(my < opp){ losses++; formSeq.push("L"); }
-      else { draws++; formSeq.push("D"); }
-      if(isHome){ gfHW += my*weight; gaHW += opp*weight; hW += weight; hN++; }
-      else { gfAW += my*weight; gaAW += opp*weight; aW += weight; aN++; }
+      const weight = Math.pow(DECAY, (N - 1 - idx));
+      if(my > opp){ wins++; formSeq.push("W"); } else if(my < opp){ losses++; formSeq.push("L"); } else { draws++; formSeq.push("D"); }
+      if(isHome){ gfHomeW += my*weight; gaHomeW += opp*weight; homeW += weight; homeN++; }
+      else { gfAwayW += my*weight; gaAwayW += opp*weight; awayW += weight; awayN++; }
     });
+
     return {
-      n:N, wins, draws, losses, winRate: wins/N,
-      formSeq: formSeq.slice(-6),
-      attackHomeRate: hW>0 ? gfHW/hW : null,
-      defenseHomeRate: hW>0 ? gaHW/hW : null,
-      attackAwayRate: aW>0 ? gfAW/aW : null,
-      defenseAwayRate: aW>0 ? gaAW/aW : null,
-      homeN:hN, awayN:aN,
+      n:N, wins, draws, losses, winRate: wins/N, formSeq: formSeq.slice(-6),
+      attackHomeRate: homeW>0 ? gfHomeW/homeW : null, defenseHomeRate: homeW>0 ? gaHomeW/homeW : null,
+      attackAwayRate: awayW>0 ? gfAwayW/awayW : null, defenseAwayRate: awayW>0 ? gaAwayW/awayW : null,
+      homeN, awayN,
     };
   }
 
-  /* ---------- SOS iterativo (ajuste proporcional) ---------- */
-  function iterativeStrengths(matches, leagueStats, iterations){
-    iterations = iterations || 5;
-    const finished = matches.filter(m => m.status === "FINISHED");
-    const ratings = {};
-    const ensure = id => { if(!ratings[id]) ratings[id] = { attack:1, defense:1 }; return ratings[id]; };
-    finished.forEach(m => { ensure(m.homeTeam.id); ensure(m.awayTeam.id); });
-    if(!finished.length) return ratings;
-    for(let iter=0; iter<iterations; iter++){
-      const attNum={}, attDen={}, defNum={}, defDen={};
-      finished.forEach(m => {
-        const h=m.homeTeam.id, a=m.awayTeam.id;
-        const hg=m.score.fullTime.home||0, ag=m.score.fullTime.away||0;
-        const rh=ratings[h], ra=ratings[a];
-        attNum[h]=(attNum[h]||0)+hg; attDen[h]=(attDen[h]||0)+leagueStats.avgHomeGoals*ra.defense;
-        defNum[a]=(defNum[a]||0)+hg; defDen[a]=(defDen[a]||0)+leagueStats.avgHomeGoals*rh.attack;
-        attNum[a]=(attNum[a]||0)+ag; attDen[a]=(attDen[a]||0)+leagueStats.avgAwayGoals*rh.defense;
-        defNum[h]=(defNum[h]||0)+ag; defDen[h]=(defDen[h]||0)+leagueStats.avgAwayGoals*ra.attack;
-      });
-      Object.keys(ratings).forEach(id => {
-        const prevA = ratings[id].attack, prevD = ratings[id].defense;
-        const newA = attDen[id] ? (attNum[id]/attDen[id]) : prevA;
-        const newD = defDen[id] ? (defNum[id]/defDen[id]) : prevD;
-        ratings[id].attack = clamp(prevA*0.35 + newA*0.65, 0.25, 3.5);
-        ratings[id].defense = clamp(prevD*0.35 + newD*0.65, 0.25, 3.5);
-      });
-    }
-    return ratings;
-  }
-
-  /* ---------- shrinkage bayesiano + SOS ---------- */
-  function blendedStrength(teamId, inCompMatches, globalMatches, leagueStats, sosRatings){
+  function blendedStrength(teamId, inCompMatches, globalMatches, leagueStats){
     const inComp = rawStrength(teamId, inCompMatches);
     const global = rawStrength(teamId, globalMatches||[]);
-    const PSEUDO_IN = 5, PSEUDO_GL = 3;
+    const PSEUDO = 4;
     const GLOBAL_DAMPING = 0.55;
+
     function combine(inRate, inW, globalRate, globalW, leagueAvg){
-      let num = leagueAvg * PSEUDO_IN;
-      let den = PSEUDO_IN;
-      if(globalRate!=null && globalW>0){
-        const w = globalW * GLOBAL_DAMPING;
-        num += globalRate * w; den += w;
-      }
+      let num = leagueAvg*PSEUDO, den = PSEUDO;
+      if(globalRate!=null && globalW>0){ num += globalRate*globalW; den += globalW; }
       if(inRate!=null && inW>0){ num += inRate*inW; den += inW; }
       return num/den;
     }
-    const ihN = inComp?inComp.homeN:0, iaN = inComp?inComp.awayN:0;
-    const ghN = global?global.homeN*GLOBAL_DAMPING:0, gaN = global?global.awayN*GLOBAL_DAMPING:0;
 
-    let attackHome = clamp(combine(inComp&&inComp.attackHomeRate, ihN, global&&global.attackHomeRate, ghN, leagueStats.avgHomeGoals)/leagueStats.avgHomeGoals, 0.25, 3);
-    let defenseHome = clamp(combine(inComp&&inComp.defenseHomeRate, ihN, global&&global.defenseHomeRate, ghN, leagueStats.avgAwayGoals)/leagueStats.avgAwayGoals, 0.25, 3);
-    let attackAway = clamp(combine(inComp&&inComp.attackAwayRate, iaN, global&&global.attackAwayRate, gaN, leagueStats.avgAwayGoals)/leagueStats.avgAwayGoals, 0.25, 3);
-    let defenseAway = clamp(combine(inComp&&inComp.defenseAwayRate, iaN, global&&global.defenseAwayRate, gaN, leagueStats.avgHomeGoals)/leagueStats.avgHomeGoals, 0.25, 3);
+    const inHomeN = inComp ? inComp.homeN : 0, inAwayN = inComp ? inComp.awayN : 0;
+    const gHomeN = global ? global.homeN*GLOBAL_DAMPING : 0, gAwayN = global ? global.awayN*GLOBAL_DAMPING : 0;
 
-    // mistura com SOS (peso cresce com nº de jogos na competição)
-    if(sosRatings && sosRatings[teamId]){
-      const sos = sosRatings[teamId];
-      const n = inComp ? inComp.n : 0;
-      const sosWeight = clamp(n/12, 0, 0.55);
-      attackHome = attackHome*(1-sosWeight) + sos.attack*sosWeight;
-      attackAway = attackAway*(1-sosWeight) + sos.attack*sosWeight;
-      defenseHome = defenseHome*(1-sosWeight) + sos.defense*sosWeight;
-      defenseAway = defenseAway*(1-sosWeight) + sos.defense*sosWeight;
-    }
+    const attackHomeRate = combine(inComp&&inComp.attackHomeRate, inHomeN, global&&global.attackHomeRate, gHomeN, leagueStats.avgHomeGoals);
+    const defenseHomeRate = combine(inComp&&inComp.defenseHomeRate, inHomeN, global&&global.defenseHomeRate, gHomeN, leagueStats.avgAwayGoals);
+    const attackAwayRate = combine(inComp&&inComp.attackAwayRate, inAwayN, global&&global.attackAwayRate, gAwayN, leagueStats.avgAwayGoals);
+    const defenseAwayRate = combine(inComp&&inComp.defenseAwayRate, inAwayN, global&&global.defenseAwayRate, gAwayN, leagueStats.avgHomeGoals);
 
     const winRate = inComp ? inComp.winRate : (global ? global.winRate : null);
     const formSeq = inComp ? inComp.formSeq : (global ? global.formSeq : []);
+
     return {
-      attackHome: clamp(attackHome, 0.25, 3),
-      defenseHome: clamp(defenseHome, 0.25, 3),
-      attackAway: clamp(attackAway, 0.25, 3),
-      defenseAway: clamp(defenseAway, 0.25, 3),
-      n: inComp?inComp.n:0, globalN: global?global.n:0,
+      attackHome: Utils.clamp(attackHomeRate/leagueStats.avgHomeGoals, 0.3, 2.8),
+      defenseHome: Utils.clamp(defenseHomeRate/leagueStats.avgAwayGoals, 0.3, 2.8),
+      attackAway: Utils.clamp(attackAwayRate/leagueStats.avgAwayGoals, 0.3, 2.8),
+      defenseAway: Utils.clamp(defenseAwayRate/leagueStats.avgHomeGoals, 0.3, 2.8),
+      n: inComp ? inComp.n : 0,
+      globalN: global ? global.n : 0,
       winRate, formSeq,
     };
   }
@@ -1260,10 +1164,10 @@ const Predict = (function(){
     if(!s) return null;
     return {
       wins:s.wins, draws:s.draws, losses:s.losses, n:s.n, winRate:s.winRate, formSeq:s.formSeq,
-      attackHome: clamp((s.attackHomeRate ?? leagueStats.avgHomeGoals)/leagueStats.avgHomeGoals, 0.25, 3),
-      defenseHome: clamp((s.defenseHomeRate ?? leagueStats.avgAwayGoals)/leagueStats.avgAwayGoals, 0.25, 3),
-      attackAway: clamp((s.attackAwayRate ?? leagueStats.avgAwayGoals)/leagueStats.avgAwayGoals, 0.25, 3),
-      defenseAway: clamp((s.defenseAwayRate ?? leagueStats.avgHomeGoals)/leagueStats.avgHomeGoals, 0.25, 3),
+      attackHome: Utils.clamp((s.attackHomeRate ?? (leagueStats.avgHomeGoals))/(leagueStats.avgHomeGoals||1), 0.25, 3),
+      defenseHome: Utils.clamp((s.defenseHomeRate ?? (leagueStats.avgAwayGoals))/(leagueStats.avgAwayGoals||1), 0.25, 3),
+      attackAway: Utils.clamp((s.attackAwayRate ?? (leagueStats.avgAwayGoals))/(leagueStats.avgAwayGoals||1), 0.25, 3),
+      defenseAway: Utils.clamp((s.defenseAwayRate ?? (leagueStats.avgHomeGoals))/(leagueStats.avgHomeGoals||1), 0.25, 3),
       gfAvg: s.n ? ((s.attackHomeRate||0)*s.homeN + (s.attackAwayRate||0)*s.awayN)/s.n : 0,
       gaAvg: s.n ? ((s.defenseHomeRate||0)*s.homeN + (s.defenseAwayRate||0)*s.awayN)/s.n : 0,
     };
@@ -1271,8 +1175,7 @@ const Predict = (function(){
 
   function headToHead(homeId, awayId, matches){
     return matches.filter(m => m.status==="FINISHED" && (
-      (m.homeTeam.id===homeId && m.awayTeam.id===awayId) ||
-      (m.homeTeam.id===awayId && m.awayTeam.id===homeId)
+      (m.homeTeam.id===homeId && m.awayTeam.id===awayId) || (m.homeTeam.id===awayId && m.awayTeam.id===homeId)
     )).sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
   }
 
@@ -1285,99 +1188,70 @@ const Predict = (function(){
     }
     return null;
   }
-
-  /* ---------- modelo baseado na classificação ---------- */
-  function standingsWinProb(standingsResp, homeId, awayId){
+  function totalTeamsInStandings(standingsResp){
     if(!standingsResp || !standingsResp.standings) return null;
     const table = standingsResp.standings.find(t=>t.type==="TOTAL");
-    if(!table) return null;
-    const hRow = table.table.find(r=>r.team.id===homeId);
-    const aRow = table.table.find(r=>r.team.id===awayId);
-    if(!hRow || !aRow || !hRow.playedGames || !aRow.playedGames) return null;
-    const hPPG = hRow.points/hRow.playedGames, aPPG = aRow.points/aRow.playedGames;
-    const hGD = hRow.goalDifference/hRow.playedGames, aGD = aRow.goalDifference/aRow.playedGames;
-    const diff = (hPPG-aPPG)*0.65 + (hGD-aGD)*0.35;
-    const z = diff*0.9 + 0.28;
-    const pWinRaw = 1/(1+Math.exp(-z));
-    const drawShare = clamp(0.27 - Math.abs(diff)*0.05, 0.16, 0.27);
-    let pHome = clamp(pWinRaw - drawShare/2, 0.03, 0.94);
-    let pAway = clamp((1-pWinRaw) - drawShare/2, 0.03, 0.94);
-    let pDraw = clamp(1-pHome-pAway, 0.03, 0.9);
-    const sum = pHome+pDraw+pAway;
-    return { pHome:pHome/sum, pDraw:pDraw/sum, pAway:pAway/sum, hPPG, aPPG };
+    return table ? table.table.length : null;
   }
 
-  /* ---------- PREVISÃO PRINCIPAL ---------- */
   function predictMatch(home, away, ctx){
     ctx = ctx || {};
     const matches = ctx.matches || [];
     const homeGlobal = ctx.homeGlobalMatches || [];
     const awayGlobal = ctx.awayGlobalMatches || [];
-    const stage = ctx.stage || null;
-    const isKnockout = !!(stage && stage !== "GROUP_STAGE");
     const leagueStats = buildLeagueStats(matches);
-    const sosRatings = iterativeStrengths(matches, leagueStats, 5);
-    const homeForm = blendedStrength(home.id, matches, homeGlobal, leagueStats, sosRatings);
-    const awayForm = blendedStrength(away.id, matches, awayGlobal, leagueStats, sosRatings);
-    const eloRatings = computeEloRatings(matches);
 
-    const rHome = eloFor(home.id, eloRatings, homeGlobal);
-    const rAway = eloFor(away.id, eloRatings, awayGlobal);
-    const HFA = eloRatings.HFA;
+    const homeForm = blendedStrength(home.id, matches, homeGlobal, leagueStats);
+    const awayForm = blendedStrength(away.id, matches, awayGlobal, leagueStats);
 
-    // mando dinâmico
-    const HOME_ADV = clamp(1.05 + (HFA/1000), 1.05, 1.22);
+    const { ratings: eloRatings, HFA } = computeEloRatings(matches);
+    function eloFor(teamId, globalMatches){
+      if(eloRatings[teamId] !== undefined) return eloRatings[teamId];
+      const finished = (globalMatches||[]).filter(m=>m.status==="FINISHED").slice(-10);
+      if(finished.length){
+        let diffSum = 0;
+        finished.forEach(m => {
+          const isHome = m.homeTeam.id===teamId;
+          const my = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+          const opp = isHome ? m.score.fullTime.away : m.score.fullTime.home;
+          diffSum += (my-opp);
+        });
+        return 1500 + Utils.clamp((diffSum/finished.length)*40, -250, 250);
+      }
+      return 1500;
+    }
+    const rHome = eloFor(home.id, homeGlobal);
+    const rAway = eloFor(away.id, awayGlobal);
 
+    const HOME_ADV = 1.10;
     let lambdaHome = leagueStats.avgHomeGoals * homeForm.attackHome * awayForm.defenseAway * HOME_ADV;
     let lambdaAway = leagueStats.avgAwayGoals * awayForm.attackAway * homeForm.defenseHome;
 
-    // ajuste Elo
     const eloDiff = (rHome+HFA) - rAway;
-    const eloFactor = clamp(eloDiff/1100, -0.32, 0.32);
-    lambdaHome *= (1 + eloFactor*0.45);
-    lambdaAway *= (1 - eloFactor*0.45);
+    const eloFactor = Utils.clamp(eloDiff/1000, -0.35, 0.35);
+    lambdaHome *= (1 + eloFactor*0.5);
+    lambdaAway *= (1 - eloFactor*0.5);
 
-    // mata-mata = mais truncado
-    if(isKnockout){ lambdaHome *= 0.95; lambdaAway *= 0.95; }
+    lambdaHome = Utils.clamp(lambdaHome, 0.2, 4.5);
+    lambdaAway = Utils.clamp(lambdaAway, 0.2, 4.5);
 
-    // H2H com peso decrescente por recência
     const h2h = headToHead(home.id, away.id, matches);
     if(h2h.length){
-      let hG=0, aG=0, w=0;
-      const recent = h2h.slice(0,6);
-      recent.forEach((m, i) => {
-        const decay = Math.pow(0.85, i);
+      let hGoals=0, aGoals=0;
+      h2h.slice(0,5).forEach(m => {
         const homeWasHome = m.homeTeam.id === home.id;
-        hG += (homeWasHome ? m.score.fullTime.home : m.score.fullTime.away) * decay;
-        aG += (homeWasHome ? m.score.fullTime.away : m.score.fullTime.home) * decay;
-        w += decay;
+        hGoals += homeWasHome ? m.score.fullTime.home : m.score.fullTime.away;
+        aGoals += homeWasHome ? m.score.fullTime.away : m.score.fullTime.home;
       });
-      const hAvg = hG/w, aAvg = aG/w;
-      const h2hWeight = clamp(0.10 + Math.min(h2h.length,5)*0.025, 0.10, 0.25);
-      lambdaHome = lambdaHome*(1-h2hWeight) + hAvg*h2hWeight;
-      lambdaAway = lambdaAway*(1-h2hWeight) + aAvg*h2hWeight;
+      const n = Math.min(5, h2h.length);
+      lambdaHome = lambdaHome*0.88 + (hGoals/n)*0.12;
+      lambdaAway = lambdaAway*0.88 + (aGoals/n)*0.12;
     }
 
-    // forma recente (últimos 5) como ajuste fino
-    function formBoost(form){
-      if(!form || !form.formSeq || !form.formSeq.length) return 1;
-      const seq = form.formSeq.slice(-5);
-      const w = seq.filter(x=>x==="W").length;
-      const l = seq.filter(x=>x==="L").length;
-      return clamp(1 + (w-l)*0.045, 0.82, 1.22);
-    }
-    lambdaHome *= formBoost(homeForm);
-    lambdaAway *= formBoost(awayForm);
-
-    // limites realistas
-    lambdaHome = clamp(lambdaHome, 0.25, 4.2);
-    lambdaAway = clamp(lambdaAway, 0.20, 3.8);
-
-    // matriz de placares com Dixon-Coles
-    const RHO = estimateRho(leagueStats, isKnockout);
-    const MAXG = 8;
+    const RHO = -0.08;
+    const MAXG = 7;
     let grid = [];
-    let pHomeP=0, pDrawP=0, pAwayP=0, pBTTS=0, pOver15=0, pOver25=0, pOver35=0;
+    let pHomePoisson=0, pDrawPoisson=0, pAwayPoisson=0, pBTTS=0, pOver15=0, pOver25=0, pOver35=0;
     let best = { h:0,a:0,p:0 };
     let rawTotal = 0;
     for(let h=0; h<=MAXG; h++){
@@ -1391,91 +1265,58 @@ const Predict = (function(){
     }
     for(let h=0; h<=MAXG; h++){
       for(let a=0; a<=MAXG; a++){
-        grid[h][a] /= rawTotal;
+        grid[h][a] = grid[h][a] / rawTotal;
         const p = grid[h][a];
-        if(h>a) pHomeP += p;
-        else if(h<a) pAwayP += p;
-        else pDrawP += p;
+        if(h>a) pHomePoisson += p; else if(h<a) pAwayPoisson += p; else pDrawPoisson += p;
         if(h>0 && a>0) pBTTS += p;
         if(h+a > 1) pOver15 += p;
         if(h+a > 2) pOver25 += p;
         if(h+a > 3) pOver35 += p;
-        if(p > best.p) best = { h, a, p };
+        if(p > best.p) best = { h,a,p };
       }
     }
 
     const eloProb = eloWinProb(rHome, rAway, HFA);
-    const standingsProb = standingsWinProb(ctx.standings, home.id, away.id);
 
-    // pesos do ensemble dinâmicos
     const dataPoints = homeForm.n + awayForm.n;
-    let poissonWeight = clamp(0.38 + dataPoints*0.045, 0.35, 0.68);
-    let eloWeight = clamp(0.55 - dataPoints*0.02, 0.20, 0.55);
-    let standingsWeight = standingsProb ? 0.15 : 0;
-    const totalW = poissonWeight + eloWeight + standingsWeight;
-    poissonWeight/=totalW; eloWeight/=totalW; standingsWeight/=totalW;
+    const poissonWeight = Utils.clamp(0.35 + dataPoints*0.05, 0.35, 0.75);
+    const eloWeight = 1 - poissonWeight;
 
-    let pHome = pHomeP*poissonWeight + eloProb.pHome*eloWeight + (standingsProb?standingsProb.pHome*standingsWeight:0);
-    let pDraw = pDrawP*poissonWeight + eloProb.pDraw*eloWeight + (standingsProb?standingsProb.pDraw*standingsWeight:0);
-    let pAway = pAwayP*poissonWeight + eloProb.pAway*eloWeight + (standingsProb?standingsProb.pAway*standingsWeight:0);
+    let pHome = pHomePoisson*poissonWeight + eloProb.pHome*eloWeight;
+    let pDraw = pDrawPoisson*poissonWeight + eloProb.pDraw*eloWeight;
+    let pAway = pAwayPoisson*poissonWeight + eloProb.pAway*eloWeight;
     const sumP = pHome+pDraw+pAway;
     pHome/=sumP; pDraw/=sumP; pAway/=sumP;
 
-    // concordância entre modelos
-    function favOf(h,d,a){ return h>=d && h>=a ? "HOME" : (a>=d && a>=h ? "AWAY" : "DRAW"); }
-    const pFav = favOf(pHomeP,pDrawP,pAwayP);
-    const eFav = favOf(eloProb.pHome,eloProb.pDraw,eloProb.pAway);
-    const sFav = standingsProb ? favOf(standingsProb.pHome,standingsProb.pDraw,standingsProb.pAway) : null;
-    const modelsAgree = pFav === eFav;
-    const allFavs = [pFav, eFav].concat(sFav ? [sFav] : []);
-    const finalFav = favOf(pHome,pDraw,pAway);
-    const agreementCount = allFavs.filter(f => f === finalFav).length;
-    const modelsAgreeAll = agreementCount === allFavs.length;
+    function favoriteOf(h,d,a){ return h>=d && h>=a ? "HOME" : (a>=d && a>=h ? "AWAY" : "DRAW"); }
+    const poissonFav = favoriteOf(pHomePoisson,pDrawPoisson,pAwayPoisson);
+    const eloFav = favoriteOf(eloProb.pHome,eloProb.pDraw,eloProb.pAway);
+    const modelsAgree = poissonFav === eloFav;
+
     const maxProb = Math.max(pHome,pDraw,pAway);
+    let confidence = 30 + Utils.clamp(dataPoints,0,20)*2.2 + (maxProb-0.34)*100 + (modelsAgree?8:-6);
+    if(h2h.length) confidence += Math.min(h2h.length,5)*1.2;
+    confidence = Math.round(Utils.clamp(confidence, 25, 96));
 
-    // confiança calibrada
-    let confidence = 28
-      + clamp(dataPoints,0,25)*2.0
-      + (maxProb-0.34)*110
-      + (modelsAgree?9:-7)
-      + (modelsAgreeAll?5:0)
-      + (Math.abs(rHome+HFA-rAway)/100)*4;
-    if(h2h.length) confidence += Math.min(h2h.length,5)*1.1;
-    if(standingsProb) confidence += 2;
-    // penaliza se a forma recente contradiz a previsão
-    if(homeForm.formSeq && awayForm.formSeq){
-      const hLast = homeForm.formSeq[homeForm.formSeq.length-1];
-      const aLast = awayForm.formSeq[awayForm.formSeq.length-1];
-      if(hLast === "L" && finalFav === "HOME") confidence -= 3;
-      if(aLast === "L" && finalFav === "AWAY") confidence -= 3;
-    }
-    confidence = Math.round(clamp(confidence, 22, 97));
-
-    // fatores explicativos
     const factors = [];
-    factors.push({ name:"Rating Elo (casa × fora)", val: Math.round(rHome)+" × "+Math.round(rAway)+(HFA?(" · mando +"+Math.round(HFA)):""), positive:(rHome+HFA)>=rAway });
-    factors.push({ name:"Concordância entre modelos", val: modelsAgreeAll ? "Todos os modelos apontam o mesmo favorito" : (modelsAgree ? "Poisson e Elo concordam" : "Modelos divergem — mais incerteza"), positive:modelsAgree });
-    factors.push({ name:"Força ajustada por adversário (SOS)", val:"Ataque/defesa recalculados considerando a força de quem cada time enfrentou", positive:true });
-    factors.push({ name:"Correlação Dixon-Coles (ρ)", val: RHO.toFixed(3)+(isKnockout?" · ajustado para mata-mata":""), positive:true });
-    factors.push({ name:"Amostra ("+(home.shortName||home.name)+")", val: homeForm.n+" na competição"+(homeForm.globalN?(" + "+homeForm.globalN+" globais"):""), positive:homeForm.n>0 });
-    factors.push({ name:"Amostra ("+(away.shortName||away.name)+")", val: awayForm.n+" na competição"+(awayForm.globalN?(" + "+awayForm.globalN+" globais"):""), positive:awayForm.n>0 });
-    if(homeForm.winRate!=null) factors.push({ name:`Forma recente (${home.shortName||home.name})`, val:(homeForm.winRate*100).toFixed(0)+"% vitórias ("+homeForm.formSeq.join("")+")", positive:homeForm.winRate>=0.5 });
-    if(awayForm.winRate!=null) factors.push({ name:`Forma recente (${away.shortName||away.name})`, val:(awayForm.winRate*100).toFixed(0)+"% vitórias ("+awayForm.formSeq.join("")+")", positive:awayForm.winRate>=0.5 });
-    factors.push({ name:"Mando de campo", val:"+"+Math.round((HOME_ADV-1)*100)+"% ataque + efeito Elo", positive:true });
-    factors.push({ name:`Ataque (${home.shortName||home.name})`, val: Math.round(homeForm.attackHome*100)+"% da média", positive:homeForm.attackHome>=1 });
-    factors.push({ name:`Ataque (${away.shortName||away.name})`, val: Math.round(awayForm.attackAway*100)+"% da média", positive:awayForm.attackAway>=1 });
-    factors.push({ name:`Defesa (${home.shortName||home.name})`, val: Math.round((2-homeForm.defenseHome)*100)+"% (quanto maior, melhor)", positive:homeForm.defenseHome<=1 });
-    factors.push({ name:`Defesa (${away.shortName||away.name})`, val: Math.round((2-awayForm.defenseAway)*100)+"% (quanto maior, melhor)", positive:awayForm.defenseAway<=1 });
+    factors.push({ name:"Rating Elo (casa x fora)", val: Math.round(rHome)+" x "+Math.round(rAway)+(HFA?(" · mando +"+Math.round(HFA)):""), positive: (rHome+HFA)>=rAway });
+    factors.push({ name:"Concordância entre modelos", val: modelsAgree ? "Poisson e Elo apontam o mesmo favorito" : "Modelos divergem — mais incerteza", positive: modelsAgree });
+    factors.push({ name:`Amostra de jogos (${home.shortName||home.name})`, val: homeForm.n+" na competição"+(homeForm.globalN?(" + "+homeForm.globalN+" em outras competições"):""), positive: homeForm.n>0 });
+    factors.push({ name:`Amostra de jogos (${away.shortName||away.name})`, val: awayForm.n+" na competição"+(awayForm.globalN?(" + "+awayForm.globalN+" em outras competições"):""), positive: awayForm.n>0 });
+    if(homeForm.winRate!=null) factors.push({ name: `Forma recente de ${home.shortName||home.name}`, val: (homeForm.winRate*100).toFixed(0)+"% vitórias ("+homeForm.formSeq.join("")+")", positive: homeForm.winRate>=0.5 });
+    if(awayForm.winRate!=null) factors.push({ name: `Forma recente de ${away.shortName||away.name}`, val: (awayForm.winRate*100).toFixed(0)+"% vitórias ("+awayForm.formSeq.join("")+")", positive: awayForm.winRate>=0.5 });
+    factors.push({ name:"Mando de campo", val:"+"+Math.round((HOME_ADV-1)*100)+"% ataque (base) + efeito Elo", positive:true });
+    factors.push({ name:`Força ofensiva (${home.shortName||home.name})`, val: Math.round(homeForm.attackHome*100)+"% da média", positive: homeForm.attackHome>=1 });
+    factors.push({ name:`Força ofensiva (${away.shortName||away.name})`, val: Math.round(awayForm.attackAway*100)+"% da média", positive: awayForm.attackAway>=1 });
+    factors.push({ name:`Força defensiva (${home.shortName||home.name})`, val: Math.round((2-homeForm.defenseHome)*100)+"% (quanto maior, melhor)", positive: homeForm.defenseHome<=1 });
+    factors.push({ name:`Força defensiva (${away.shortName||away.name})`, val: Math.round((2-awayForm.defenseAway)*100)+"% (quanto maior, melhor)", positive: awayForm.defenseAway<=1 });
     if(ctx.standings){
       const hPos = findPosition(ctx.standings, home.id), aPos = findPosition(ctx.standings, away.id);
-      if(hPos && aPos) factors.push({ name:"Posição na tabela", val:`${hPos}º × ${aPos}º`, positive:hPos<aPos });
+      if(hPos && aPos) factors.push({ name:"Posição na tabela", val: `${hPos}º vs ${aPos}º`, positive: hPos<aPos });
     }
-    if(standingsProb) factors.push({ name:"Modelo de classificação (pts/jogo)", val: standingsProb.hPPG.toFixed(2)+" × "+standingsProb.aPPG.toFixed(2)+" pts/jogo", positive:standingsProb.hPPG>=standingsProb.aPPG });
-    if(isKnockout) factors.push({ name:"Fase eliminatória", val:"Gols esperados reduzidos ~5% (jogos mais truncados)", positive:true });
-    if(h2h.length) factors.push({ name:"Confrontos diretos", val:h2h.length+" jogo(s) considerado(s) com recência", positive:true });
-    factors.push({ name:"Pesos do ensemble", val: "Poisson "+Math.round(poissonWeight*100)+"% · Elo "+Math.round(eloWeight*100)+"%"+(standingsProb?(" · Tabela "+Math.round(standingsWeight*100)+"%"):""), positive:true });
+    if(h2h.length) factors.push({ name:"Confrontos diretos (histórico)", val: h2h.length+" jogo(s) considerado(s)", positive:true });
     if(homeForm.n===0 && awayForm.n===0 && homeForm.globalN===0 && awayForm.globalN===0){
-      factors.push({ name:"Aviso", val:"Sem histórico — previsão baseada nas médias da competição", positive:false });
+      factors.push({ name:"Aviso", val:"Nenhum dado histórico encontrado para os dois times — previsão baseada apenas nas médias da competição", positive:false });
     }
 
     return {
@@ -1483,17 +1324,15 @@ const Predict = (function(){
       expHome: lambdaHome, expAway: lambdaAway,
       bestScore: best, confidence, factors, grid, h2hCount: h2h.length,
       homeForm, awayForm,
-      elo:{ home: Math.round(rHome), away: Math.round(rAway), hfa: Math.round(HFA) },
-      modelsAgree, modelsAgreeAll,
-      poissonProbs:{ home:pHomeP, draw:pDrawP, away:pAwayP },
+      elo: { home: Math.round(rHome), away: Math.round(rAway), hfa: Math.round(HFA) },
+      modelsAgree,
+      poissonProbs: { home:pHomePoisson, draw:pDrawPoisson, away:pAwayPoisson },
       eloProbs: eloProb,
-      standingsProbs: standingsProb,
-      ensembleWeights:{ poisson: poissonWeight, elo: eloWeight, standings: standingsWeight },
-      rho: RHO, isKnockout,
+      ensembleWeights: { poisson: poissonWeight, elo: eloWeight },
     };
   }
 
-  return { predictMatch, teamStrength, headToHead, computeEloRatings, eloWinProb, iterativeStrengths, standingsWinProb };
+  return { predictMatch, teamStrength, headToHead, computeEloRatings, eloWinProb };
 })();
 
 /* =====================================================================
@@ -2194,7 +2033,6 @@ const Views = (function(){
         standings,
         homeGlobalMatches: homeGlobalData.matches || [],
         awayGlobalMatches: awayGlobalData.matches || [],
-        stage: m.stage,
       };
       const pred = Predict.predictMatch(m.homeTeam, m.awayTeam, ctx);
       panel.innerHTML = "";
@@ -2228,9 +2066,9 @@ const Views = (function(){
     card.appendChild(bars);
 
     if(p.elo){
-      const eloRow = Utils.el("div",{style:"display:flex;justify-content:space-between;gap:8px;font-size:.72rem;color:var(--text-2);margin:-6px 0 var(--sp-4);flex-wrap:wrap"},[
+      const eloRow = Utils.el("div",{style:"display:flex;justify-content:space-between;gap:8px;font-size:.72rem;color:var(--text-2);margin:-6px 0 var(--sp-4)"},[
         Utils.el("span",{},["Elo: "+p.elo.home+" x "+p.elo.away+(p.elo.hfa?(" (mando +"+p.elo.hfa+")"):"")]),
-        Utils.el("span",{},[p.modelsAgreeAll ? "Poisson + Elo"+(p.standingsProbs?" + Tabela":"")+" concordam" : (p.modelsAgree ? "Poisson e Elo concordam" : "Modelos divergem")]),
+        Utils.el("span",{},[p.modelsAgree ? "Poisson + Elo concordam" : "Poisson e Elo divergem"]),
       ]);
       card.appendChild(eloRow);
     }
@@ -2269,7 +2107,7 @@ const Views = (function(){
     ])));
     card.appendChild(factors);
     card.appendChild(Utils.el("p",{style:"font-size:.7rem;color:var(--text-2);margin-top:12px"},[
-      "Modelo em ensemble de 3 componentes: (1) Poisson bivariada com correção de Dixon-Coles (ρ dinâmico) sobre forças de ataque/defesa ajustadas pela força do adversário (SOS, via ajuste proporcional iterativo) e com encolhimento Bayesiano + ponderação por recência; (2) rating Elo dinâmico com fator de mando calculado por competição e ajuste por margem de gols; (3) modelo de classificação (pontos e saldo por jogo) quando a tabela está disponível. As probabilidades finais combinam os três modelos com pesos que se ajustam conforme a quantidade de dados disponível, e a confiança reflete o quanto os modelos concordam entre si. Não é garantia de resultado — é estatística aplicada ao futebol."
+      "Modelo estatístico em ensemble: distribuição de Poisson bivariada com correção de Dixon-Coles para placares baixos, forças de ataque/defesa com encolhimento Bayesiano (shrinkage) e ponderação por recência, combinada com um rating Elo dinâmico calculado sobre todos os jogos já disputados na competição e, quando o time ainda tem poucos jogos no torneio, também com seu histórico recente em outras competições. As probabilidades finais de vitória/empate/derrota são uma média ponderada entre o modelo de Poisson e o modelo de Elo — o peso se ajusta conforme a quantidade de dados disponível. Não é garantia de resultado, é estatística aplicada ao futebol."
     ]));
     return card;
   }
@@ -2818,7 +2656,6 @@ const Views = (function(){
       const homeId = Number(homeSel.value), awayId = Number(awaySel.value);
       if(!homeId || !awayId || homeId===awayId){ Toast.show("Selecione dois times diferentes", "Escolha o time da casa e o visitante para gerar a previsão."); return; }
       const homeTeam = teams.find(t=>t.id===homeId), awayTeam = teams.find(t=>t.id===awayId);
-      const selectedMatch = matchSel.value ? upcoming.find(x=>String(x.id)===matchSel.value) : null;
       resultHost.innerHTML = ""; resultHost.appendChild(loadingBlock(1));
       try{
         let standings = null;
@@ -2826,7 +2663,7 @@ const Views = (function(){
         let homeGlobalMatches = [], awayGlobalMatches = [];
         try{ const r = await Api.teamMatches(homeId, "?limit=15"); homeGlobalMatches = r.matches||[]; }catch(e){}
         try{ const r = await Api.teamMatches(awayId, "?limit=15"); awayGlobalMatches = r.matches||[]; }catch(e){}
-        const ctx = { matches: allMatches, standings, homeGlobalMatches, awayGlobalMatches, stage: selectedMatch ? selectedMatch.stage : null };
+        const ctx = { matches: allMatches, standings, homeGlobalMatches, awayGlobalMatches };
         const pred = Predict.predictMatch(homeTeam, awayTeam, ctx);
         resultHost.innerHTML = "";
         resultHost.appendChild(predictionCard(homeTeam, awayTeam, pred));
